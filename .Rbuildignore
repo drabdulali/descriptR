@@ -1,0 +1,13 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^LICENSE\.md$
+^\.github$
+^\.git$
+^\.gitignore$
+^data-raw$
+^CRAN_prep$
+^QA_Final$
+^community$
+^submission_workflow$
+^cran-comments\.md$
