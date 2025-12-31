@@ -34,6 +34,7 @@ Imports:
     purrr (>= 1.0.0),
     scales (>= 1.2.0),
     rlang (>= 1.0.0),
+    reshape2 (>= 1.4.0),
     stats,
     utils,
     grDevices,
