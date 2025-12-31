@@ -1,0 +1,496 @@
+---
+title: "Getting Started with descriptR"
+author: "Abdul Ali"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with descriptR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+**descriptR** is a comprehensive R package for descriptive and inferential statistics that automatically detects variable types and applies appropriate analyses. It generates narrative insights from data and produces publication-ready outputs in multiple formats (HTML, Word, Excel, PDF).
+
+### Key Features
+
+- **Intelligent Analysis**: Automatically detects variable types and selects appropriate statistical methods
+- **Comprehensive Statistics**: From basic descriptives to advanced multivariate methods
+- **Narrative Insights**: Generates human-readable interpretations of results
+- **Multiple Export Formats**: HTML, Word, Excel, Markdown, and more
+- **Publication-Ready**: Multiple journal-specific templates (APA, Nature, Science, NEJM)
+- **Colorblind-Safe Palettes**: 16 carefully designed color schemes
+- **Tidyverse Integration**: Works seamlessly with dplyr, ggplot2, and the tidyverse
+
+## Installation
+
+```{r installation, eval = FALSE}
+# Install from GitHub
+devtools::install_github("drabdulali/descriptR")
+
+# Load the package
+library(descriptR)
+```
+
+## Quick Start
+
+### Basic Descriptive Statistics
+
+The simplest way to get started is with the `analyze_and_report()` function, which performs analysis and generates a report in one step:
+
+```{r quick-start, eval = FALSE}
+library(descriptR)
+
+# Load example data
+data(mtcars)
+
+# Quick descriptive analysis with HTML report
+analyze_and_report(
+  mtcars,
+  output_file = "mtcars_report",
+  analysis_type = "descriptive",
+  format = "html",
+  title = "Motor Trend Car Analysis"
+)
+```
+
+This single function call:
+- Analyzes all numeric variables in the dataset
+- Generates descriptive statistics (mean, SD, quartiles, etc.)
+- Creates narrative insights about the data
+- Produces a professionally formatted HTML report
+
+### Grouped Comparisons
+
+Compare groups with automatic effect size calculations:
+
+```{r grouped-comparison, eval = FALSE}
+# Load iris dataset
+data(iris)
+
+# Compare species with grouped analysis
+analyze_and_report(
+  iris,
+  output_file = "iris_comparison",
+  analysis_type = "grouped",
+  group = "Species",
+  format = "html",
+  template = "apa"
+)
+```
+
+This analysis:
+- Compares all numeric variables across species
+- Calculates means, standard deviations by group
+- Computes effect sizes for group differences
+- Generates insights about notable differences
+- Formats output in APA style
+
+## Core Analysis Types
+
+### 1. Descriptive Statistics
+
+```{r descriptive, eval = FALSE}
+# Descriptive analysis for specific variables
+result <- perform_descriptive_analysis(
+  mtcars,
+  vars = c("mpg", "hp", "wt")
+)
+
+# View results
+print(result$statistics)
+print(result$insights)
+```
+
+**What you get:**
+- Sample size and missing data counts
+- Central tendency (mean, median)
+- Dispersion (SD, IQR, range)
+- Quartiles and extremes
+- Narrative insights about variability and missing data
+
+### 2. Correlation Analysis
+
+```{r correlation, eval = FALSE}
+# Correlation analysis
+result <- perform_correlation_analysis(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp"),
+  method = "pearson"
+)
+
+# View correlation matrix
+print(result$correlation_matrix)
+
+# View insights
+print(result$insights)
+```
+
+**What you get:**
+- Correlation matrix
+- P-values for each correlation
+- Identification of strong correlations
+- Insights about relationships
+
+### 3. Normality Assessment
+
+```{r normality, eval = FALSE}
+# Assess normality
+result <- perform_normality_analysis(
+  mtcars,
+  vars = c("mpg", "hp")
+)
+
+# View test results
+print(result$normality_tests)
+
+# Insights about distribution
+print(result$insights)
+```
+
+**What you get:**
+- Shapiro-Wilk test results
+- Statistical significance
+- Binary normality assessment
+- Recommendations for parametric vs non-parametric methods
+
+### 4. Missing Data Analysis
+
+```{r missing, eval = FALSE}
+# Create data with missing values
+data_with_na <- mtcars
+data_with_na$mpg[1:5] <- NA
+data_with_na$hp[3:7] <- NA
+
+# Analyze missing patterns
+result <- perform_missing_analysis(data_with_na)
+
+# View missing summary
+print(result$missing_summary)
+print(result$insights)
+```
+
+**What you get:**
+- Missing counts and percentages per variable
+- Identification of variables with high missingness
+- Recommendations for handling missing data
+
+### 5. Outlier Detection
+
+```{r outliers, eval = FALSE}
+# Detect outliers
+result <- perform_outlier_analysis(
+  mtcars,
+  vars = c("mpg", "hp"),
+  method = "zscore"
+)
+
+# View outlier summary
+print(result$outlier_summary)
+print(result$insights)
+```
+
+**What you get:**
+- Outlier counts per variable
+- Percentage of outliers
+- Method used for detection
+- Insights about data quality
+
+### 6. Principal Component Analysis
+
+```{r pca, eval = FALSE}
+# Perform PCA
+result <- perform_pca_analysis(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp"),
+  scale = TRUE
+)
+
+# View variance explained
+print(result$variance_explained)
+
+# View loadings
+print(result$loadings)
+
+# Insights
+print(result$insights)
+```
+
+**What you get:**
+- Variance explained by each component
+- Cumulative variance
+- Component loadings
+- Component scores
+- Insights about dimensionality
+
+### 7. Comprehensive Analysis
+
+Run all applicable analyses in one call:
+
+```{r comprehensive, eval = FALSE}
+# Comprehensive analysis
+result <- perform_comprehensive_analysis(
+  mtcars,
+  vars = c("mpg", "hp", "wt"),
+  group = "cyl"
+)
+
+# Access individual analyses
+print(result$analyses$descriptive)
+print(result$analyses$normality)
+print(result$analyses$correlation)
+
+# View compiled insights
+print(result$insights)
+```
+
+**What you get:**
+- Descriptive statistics
+- Missing data analysis
+- Normality assessment
+- Outlier detection
+- Correlation analysis
+- Grouped comparisons (if group specified)
+- All insights compiled in one place
+
+## Exporting Results
+
+### Multiple Format Export
+
+Export your analysis to multiple formats simultaneously:
+
+```{r export-formats, eval = FALSE}
+# Analyze data
+result <- perform_descriptive_analysis(mtcars)
+
+# Export to all formats
+generate_report(
+  result,
+  output_file = "mtcars_analysis",
+  format = "all", # Exports HTML, Word, Excel, and Markdown
+  template = "apa",
+  title = "Motor Trend Car Analysis",
+  author = "Your Name"
+)
+```
+
+### Format-Specific Export
+
+Export to a single format:
+
+```{r export-single, eval = FALSE}
+# HTML only
+generate_report(
+  result,
+  output_file = "report.html",
+  format = "html",
+  template = "nature"
+)
+
+# Word only
+generate_report(
+  result,
+  output_file = "report.docx",
+  format = "word",
+  template = "science"
+)
+
+# Excel only
+generate_report(
+  result,
+  output_file = "report.xlsx",
+  format = "excel"
+)
+```
+
+### Available Templates
+
+Choose from journal-specific templates:
+
+- **default**: Clean, modern design
+- **apa**: American Psychological Association style
+- **nature**: Nature journal style
+- **science**: Science journal style
+- **nejm**: New England Journal of Medicine style
+
+```{r templates, eval = FALSE}
+# Use Nature template
+analyze_and_report(
+  mtcars,
+  "nature_style_report",
+  analysis_type = "descriptive",
+  format = "html",
+  template = "nature"
+)
+```
+
+## Working with Results
+
+### Accessing Result Components
+
+All analysis functions return structured objects:
+
+```{r result-structure, eval = FALSE}
+result <- perform_descriptive_analysis(mtcars)
+
+# Main statistics table
+stats <- result$statistics
+print(stats)
+
+# Narrative insights
+insights <- result$insights
+cat(paste(insights, collapse = "\n"))
+
+# Metadata
+meta <- result$metadata
+print(meta$timestamp)
+print(meta$n_variables)
+```
+
+### Extracting Specific Statistics
+
+```{r extract-stats, eval = FALSE}
+# Get mean for specific variable
+mpg_mean <- result$statistics[result$statistics$variable == "mpg", "mean"]
+
+# Get all means
+all_means <- result$statistics[, c("variable", "mean")]
+
+# Filter variables with high variability
+high_var <- result$statistics[result$statistics$sd > 10, ]
+```
+
+## Quick Data Export
+
+### Export Data to Excel
+
+Use `quick_export_excel()` for fast data export:
+
+```{r quick-excel, eval = FALSE}
+# Simple export
+quick_export_excel(
+  mtcars,
+  "mtcars_data.xlsx",
+  sheet_name = "Car Data"
+)
+```
+
+### Batch Export Tables
+
+Export multiple data frames to a single Excel workbook:
+
+```{r batch-export, eval = FALSE}
+# Create multiple analysis results
+desc <- perform_descriptive_analysis(mtcars)
+corr <- perform_correlation_analysis(mtcars)
+
+# Export to Excel with multiple sheets
+batch_export_tables(
+  list(
+    descriptive = desc$statistics,
+    correlations = corr$correlations
+  ),
+  output_file = "analysis_results.xlsx",
+  format = "excel"
+)
+```
+
+## Best Practices
+
+### 1. Always Inspect Your Data First
+
+```{r best-practices-1, eval = FALSE}
+# Check structure
+str(mtcars)
+
+# Summary
+summary(mtcars)
+
+# Missing data
+result <- perform_missing_analysis(mtcars)
+print(result$missing_summary)
+```
+
+### 2. Choose Appropriate Analysis Type
+
+```{r best-practices-2, eval = FALSE}
+# Check normality before parametric tests
+normality <- perform_normality_analysis(mtcars, vars = "mpg")
+
+if (normality$normality_tests$normal[1]) {
+  # Use parametric methods
+  message("Data is normal - use parametric tests")
+} else {
+  # Use non-parametric methods
+  message("Data is non-normal - use non-parametric tests")
+}
+```
+
+### 3. Check for Outliers
+
+```{r best-practices-3, eval = FALSE}
+# Detect outliers before analysis
+outliers <- perform_outlier_analysis(mtcars)
+
+if (any(outliers$outlier_summary$n_outliers > 0)) {
+  message("Outliers detected - consider sensitivity analysis")
+}
+```
+
+### 4. Document Your Analysis
+
+```{r best-practices-4, eval = FALSE}
+# Use comprehensive analysis for complete documentation
+result <- analyze_and_report(
+  mtcars,
+  "complete_analysis",
+  analysis_type = "comprehensive",
+  format = "all", # Create documentation in all formats
+  title = "Complete Motor Trend Analysis",
+  author = "Your Name",
+  include_plots = TRUE
+)
+```
+
+## Next Steps
+
+- Learn about **advanced statistical methods** in the "Advanced Analysis" vignette
+- Explore **visualization and color schemes** in the "Visualization and Reporting" vignette
+- Check the function reference for detailed parameter documentation
+
+## Getting Help
+
+```{r help, eval = FALSE}
+# Function help
+?analyze_and_report
+?generate_report
+
+# Package help
+help(package = "descriptR")
+
+# Report issues
+# https://github.com/drabdulali/descriptR/issues
+```
+
+## Summary
+
+descriptR provides:
+
+1. **One-function workflow**: `analyze_and_report()` does everything
+2. **Modular analysis**: Individual functions for specific analyses
+3. **Multiple export formats**: HTML, Word, Excel, Markdown
+4. **Professional templates**: APA, Nature, Science, NEJM
+5. **Automatic insights**: Narrative interpretation of results
+6. **Publication-ready**: High-quality outputs for papers and presentations
+
+Start simple with `analyze_and_report()`, then explore individual functions as needed!

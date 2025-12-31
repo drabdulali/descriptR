@@ -1,0 +1,918 @@
+---
+title: "Visualization and Reporting with descriptR"
+author: "Abdul Ali"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualization and Reporting with descriptR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+**descriptR** provides comprehensive visualization and reporting capabilities, including:
+
+- Automatic plot type selection
+- 16 colorblind-safe color schemes
+- Diagnostic visualizations
+- Multi-format export (PNG, PDF, SVG, etc.)
+- Journal-specific report templates
+- Publication-ready outputs
+
+```{r load, eval = FALSE}
+library(descriptR)
+library(ggplot2)
+```
+
+## Color Schemes
+
+descriptR includes 16 carefully designed, colorblind-safe color palettes.
+
+### Available Schemes
+
+Four base schemes with four boldness levels each:
+
+- **subtle**: Muted, understated colors (publications)
+- **medium**: Balanced visibility (default)
+- **bold**: High saturation (presentations)
+- **vivid**: Maximum impact (posters, social media)
+
+Each scheme has 4 boldness levels (1-4), creating 16 total combinations.
+
+### Basic Usage
+
+```{r colors-basic, eval = FALSE}
+# Get default color scheme
+colors <- get_color_scheme(
+  scheme = "medium",
+  boldness = 2,
+  n = 8
+)
+
+print(colors)
+```
+
+### Scheme Selection
+
+```{r colors-schemes, eval = FALSE}
+# Subtle colors for publications
+subtle <- get_color_scheme("subtle", boldness = 2, n = 5)
+
+# Bold colors for presentations
+bold <- get_color_scheme("bold", boldness = 3, n = 5)
+
+# Vivid colors for posters
+vivid <- get_color_scheme("vivid", boldness = 4, n = 5)
+
+# Preview colors
+preview_color_scheme("medium", boldness = 2, n = 8)
+```
+
+### Number of Colors
+
+Request any number of colors (palette extends automatically):
+
+```{r colors-n, eval = FALSE}
+# Small palette
+colors_3 <- get_color_scheme("medium", n = 3)
+
+# Large palette (interpolates additional colors)
+colors_20 <- get_color_scheme("medium", n = 20)
+```
+
+### Reverse Palette
+
+Reverse color order:
+
+```{r colors-reverse, eval = FALSE}
+colors_normal <- get_color_scheme("medium", n = 5, reverse = FALSE)
+colors_reversed <- get_color_scheme("medium", n = 5, reverse = TRUE)
+```
+
+### Scheme Recommendations
+
+Get recommended scheme for specific contexts:
+
+```{r colors-recommend, eval = FALSE}
+# Publication
+pub_rec <- get_scheme_for_type("categorical", "publication")
+pub_colors <- get_color_scheme(pub_rec$scheme, pub_rec$boldness)
+
+# Presentation
+pres_rec <- get_scheme_for_type("categorical", "presentation")
+pres_colors <- get_color_scheme(pres_rec$scheme, pres_rec$boldness)
+
+# Web
+web_rec <- get_scheme_for_type("continuous", "web")
+web_colors <- get_color_scheme(web_rec$scheme, web_rec$boldness)
+```
+
+## Specialized Palettes
+
+### Diverging Palettes
+
+For data with a meaningful midpoint (e.g., correlation matrices):
+
+```{r diverging, eval = FALSE}
+# Create diverging palette
+div_colors <- create_diverging_palette(
+  low_color = "#0571B0",
+  mid_color = "#F7F7F7",
+  high_color = "#CA0020",
+  n = 11
+)
+
+# Use with correlation heatmap
+plot_correlation_matrix(
+  mtcars,
+  color_palette = div_colors
+)
+```
+
+### Sequential Palettes
+
+For ordered data (light to dark or vice versa):
+
+```{r sequential, eval = FALSE}
+# Light to dark
+seq_colors <- create_sequential_palette(
+  base_color = "#3182BD",
+  n = 9,
+  direction = "light_to_dark"
+)
+
+# Dark to light
+seq_colors_rev <- create_sequential_palette(
+  base_color = "#3182BD",
+  n = 9,
+  direction = "dark_to_light"
+)
+```
+
+## Color Accessibility
+
+Check WCAG compliance for color combinations.
+
+### Contrast Checking
+
+```{r accessibility, eval = FALSE}
+# Check contrast ratio
+result <- check_color_accessibility(
+  foreground = "#000000",
+  background = "#FFFFFF",
+  level = "AA"
+)
+
+print(result$contrast_ratio)
+print(result$passes_normal) # Normal text
+print(result$passes_large)  # Large text (18pt+)
+```
+
+### AAA Standard
+
+For maximum accessibility:
+
+```{r accessibility-aaa, eval = FALSE}
+result <- check_color_accessibility(
+  foreground = "#333333",
+  background = "#FFFFFF",
+  level = "AAA"
+)
+
+if (result$passes_normal) {
+  message("Passes AAA for normal text")
+}
+```
+
+## Exporting Colors
+
+Export palettes in various formats.
+
+### Hex Format
+
+```{r export-hex, eval = FALSE}
+colors <- get_color_scheme("medium", n = 5)
+hex_colors <- export_color_palette(colors, format = "hex")
+print(hex_colors)
+```
+
+### RGB Format
+
+```{r export-rgb, eval = FALSE}
+rgb_colors <- export_color_palette(colors, format = "rgb")
+# Returns: "rgb(65, 105, 225)", "rgb(220, 20, 60)", ...
+```
+
+### CSS Variables
+
+For web development:
+
+```{r export-css, eval = FALSE}
+css_vars <- export_color_palette(
+  colors,
+  format = "css",
+  name = "my_palette"
+)
+
+# Returns CSS custom properties:
+# :root {
+#   --my-palette-1: #4169E1;
+#   --my-palette-2: #DC143C;
+#   ...
+# }
+```
+
+### R Code
+
+For sharing with colleagues:
+
+```{r export-r, eval = FALSE}
+r_code <- export_color_palette(
+  colors,
+  format = "r",
+  name = "my_colors"
+)
+
+# Returns:
+# my_colors <- c("#4169E1", "#DC143C", ...)
+```
+
+## Automatic Plotting
+
+The `plot_variable()` function automatically selects appropriate plot types.
+
+### Univariate Plots
+
+#### Continuous Variables
+
+Automatically creates histogram or density plot:
+
+```{r plot-continuous, eval = FALSE}
+# Auto-select plot type
+plot <- plot_variable(
+  mtcars,
+  x = "mpg",
+  plot_type = "auto",
+  color_scheme = "medium",
+  theme = "publication"
+)
+
+print(plot)
+```
+
+#### Categorical Variables
+
+Creates bar chart:
+
+```{r plot-categorical, eval = FALSE}
+plot <- plot_variable(
+  mtcars,
+  x = "cyl",
+  plot_type = "auto"
+)
+```
+
+### Bivariate Plots
+
+#### Continuous vs Continuous
+
+Creates scatter plot with optional smoothing:
+
+```{r plot-scatter, eval = FALSE}
+plot <- plot_variable(
+  mtcars,
+  x = "wt",
+  y = "mpg",
+  plot_type = "auto",
+  add_smooth = TRUE
+)
+```
+
+#### Continuous vs Categorical
+
+Creates boxplot or violin plot:
+
+```{r plot-boxplot, eval = FALSE}
+# Boxplot
+plot <- plot_variable(
+  mtcars,
+  x = "cyl",
+  y = "mpg",
+  plot_type = "boxplot"
+)
+
+# Violin plot
+plot <- plot_variable(
+  mtcars,
+  x = "cyl",
+  y = "mpg",
+  plot_type = "violin"
+)
+```
+
+### Grouped Plots
+
+Add color grouping:
+
+```{r plot-grouped, eval = FALSE}
+plot <- plot_variable(
+  iris,
+  x = "Sepal.Length",
+  y = "Sepal.Width",
+  group = "Species",
+  plot_type = "scatter",
+  color_scheme = "bold"
+)
+```
+
+### Plot Types
+
+Override auto-detection:
+
+```{r plot-types, eval = FALSE}
+# Available types:
+# - "histogram"
+# - "density"
+# - "boxplot"
+# - "violin"
+# - "scatter"
+# - "bar"
+# - "qq"
+
+plot <- plot_variable(
+  mtcars,
+  x = "mpg",
+  plot_type = "density",
+  fill_color = "#3182BD"
+)
+```
+
+## Diagnostic Plots
+
+Specialized visualizations for analysis results.
+
+### Normality Diagnostics
+
+Combined diagnostic panel:
+
+```{r plot-normality, eval = FALSE}
+# Creates 4-panel diagnostic:
+# - Histogram with normal curve
+# - Q-Q plot
+# - Density plot
+# - Box plot
+
+plot <- plot_normality_diagnostics(
+  mtcars,
+  variable = "mpg"
+)
+
+print(plot)
+```
+
+### Scree Plots
+
+For PCA/EFA:
+
+```{r plot-scree, eval = FALSE}
+# Perform PCA
+pca_result <- perform_pca(mtcars)
+
+# Create scree plot
+plot <- plot_scree(
+  pca_result,
+  add_kaiser = TRUE # Add Kaiser criterion line
+)
+
+print(plot)
+```
+
+### Missing Data Patterns
+
+Visualize missing data structure:
+
+```{r plot-missing, eval = FALSE}
+# Create data with missing values
+data_na <- mtcars
+data_na$mpg[1:5] <- NA
+data_na$hp[3:8] <- NA
+
+# Analyze missing data
+missing_result <- analyze_missing(data_na)
+
+# Visualize patterns
+plot <- plot_missing_pattern(
+  data_na,
+  max_patterns = 20
+)
+
+print(plot)
+```
+
+### Outlier Visualization
+
+Show outliers in context:
+
+```{r plot-outliers, eval = FALSE}
+# Detect outliers
+outlier_result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = "zscore"
+)
+
+# Visualize
+plot <- plot_outliers(
+  outlier_result,
+  data = mtcars,
+  variable = "mpg"
+)
+
+print(plot)
+```
+
+### Effect Size Plots
+
+Forest plots for effect sizes:
+
+```{r plot-effects, eval = FALSE}
+# Example effect sizes with confidence intervals
+effects <- c(0.3, 0.5, 0.8)
+ci_lower <- c(0.1, 0.3, 0.6)
+ci_upper <- c(0.5, 0.7, 1.0)
+labels <- c("Effect 1", "Effect 2", "Effect 3")
+
+plot <- plot_effect_sizes(
+  effects = effects,
+  ci_lower = ci_lower,
+  ci_upper = ci_upper,
+  labels = labels,
+  effect_type = "Cohen's d"
+)
+
+print(plot)
+```
+
+### Group Comparisons
+
+Visualize group differences:
+
+```{r plot-group-comparison, eval = FALSE}
+plot <- plot_group_comparison(
+  iris,
+  outcome = "Sepal.Length",
+  group = "Species",
+  plot_type = "violin", # or "boxplot", "density"
+  show_points = TRUE,
+  color_scheme = "bold"
+)
+
+print(plot)
+```
+
+## Correlation Matrices
+
+Heatmaps with hierarchical clustering:
+
+```{r plot-correlation, eval = FALSE}
+# Create correlation matrix plot
+plot <- plot_correlation_matrix(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp", "drat"),
+  method = "pearson",
+  cluster = TRUE,
+  show_values = TRUE,
+  color_palette = NULL # Uses diverging palette
+)
+
+print(plot)
+```
+
+### Customization
+
+```{r correlation-custom, eval = FALSE}
+# Custom diverging palette
+my_palette <- create_diverging_palette(
+  low_color = "#0571B0",
+  mid_color = "#FFFFFF",
+  high_color = "#CA0020",
+  n = 11
+)
+
+plot <- plot_correlation_matrix(
+  mtcars,
+  color_palette = my_palette,
+  cluster = FALSE,
+  show_values = TRUE
+)
+```
+
+## Themes
+
+Pre-configured themes for different contexts.
+
+### Publication Theme
+
+Clean, minimal theme for journals:
+
+```{r theme-publication, eval = FALSE}
+plot <- plot_variable(
+  mtcars,
+  x = "mpg",
+  theme = "publication"
+)
+
+# Equivalent to:
+plot + theme_publication()
+```
+
+### Presentation Theme
+
+Larger fonts and elements:
+
+```{r theme-presentation, eval = FALSE}
+plot <- plot_variable(
+  mtcars,
+  x = "mpg",
+  theme = "presentation"
+)
+```
+
+### Poster Theme
+
+Maximum visibility:
+
+```{r theme-poster, eval = FALSE}
+plot <- plot_variable(
+  mtcars,
+  x = "mpg",
+  theme = "poster"
+)
+```
+
+## Saving Plots
+
+Export plots with multiple formats and resolutions.
+
+### Single Plot Export
+
+```{r save-plot, eval = FALSE}
+plot <- plot_variable(mtcars, x = "mpg")
+
+# Save as PNG (300 DPI)
+save_plot(
+  plot,
+  filename = "mpg_histogram.png",
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+# Save as PDF (vector)
+save_plot(
+  plot,
+  filename = "mpg_histogram.pdf",
+  width = 7,
+  height = 5
+)
+
+# Save as SVG (vector)
+save_plot(
+  plot,
+  filename = "mpg_histogram.svg",
+  width = 7,
+  height = 5
+)
+```
+
+### High-Resolution Export
+
+For publications and posters:
+
+```{r save-high-res, eval = FALSE}
+# Publication quality (600 DPI)
+save_plot(plot, "figure1_600dpi.png", dpi = 600)
+
+# Ultra high-res for posters (1200 DPI)
+save_plot(plot, "poster_figure.png", dpi = 1200)
+```
+
+### Batch Export
+
+Export multiple plots at once:
+
+```{r export-plots-batch, eval = FALSE}
+# Create several plots
+plots <- list(
+  histogram = plot_variable(mtcars, x = "mpg"),
+  scatter = plot_variable(mtcars, x = "wt", y = "mpg"),
+  boxplot = plot_variable(mtcars, x = "cyl", y = "mpg", plot_type = "boxplot")
+)
+
+# Export all as PNG and PDF
+export_plots(
+  plots,
+  output_dir = "figures",
+  prefix = "mtcars",
+  formats = c("png", "pdf"),
+  dpi = 300
+)
+
+# Creates:
+# figures/mtcars_histogram.png
+# figures/mtcars_histogram.pdf
+# figures/mtcars_scatter.png
+# figures/mtcars_scatter.pdf
+# figures/mtcars_boxplot.png
+# figures/mtcars_boxplot.pdf
+```
+
+## Report Generation
+
+Create comprehensive reports with multiple output formats.
+
+### HTML Reports
+
+```{r report-html, eval = FALSE}
+# Analyze data
+result <- perform_descriptive_analysis(mtcars)
+
+# Generate HTML report
+generate_report(
+  result,
+  output_file = "analysis_report.html",
+  format = "html",
+  template = "default",
+  title = "Motor Trend Car Analysis",
+  author = "Your Name",
+  include_plots = TRUE
+)
+```
+
+### Journal Templates
+
+Use journal-specific formatting:
+
+```{r report-templates, eval = FALSE}
+# APA style
+generate_report(
+  result,
+  output_file = "apa_report.html",
+  format = "html",
+  template = "apa"
+)
+
+# Nature style
+generate_report(
+  result,
+  output_file = "nature_report.html",
+  template = "nature"
+)
+
+# Science style
+generate_report(
+  result,
+  output_file = "science_report.html",
+  template = "science"
+)
+
+# NEJM style
+generate_report(
+  result,
+  output_file = "nejm_report.html",
+  template = "nejm"
+)
+```
+
+### Word Documents
+
+For collaborative editing:
+
+```{r report-word, eval = FALSE}
+generate_report(
+  result,
+  output_file = "report.docx",
+  format = "word",
+  title = "Analysis Report",
+  author = "Your Name"
+)
+```
+
+### Excel Workbooks
+
+Multi-sheet workbooks with formatted tables:
+
+```{r report-excel, eval = FALSE}
+generate_report(
+  result,
+  output_file = "results.xlsx",
+  format = "excel"
+)
+
+# Creates workbook with sheets:
+# - Metadata
+# - Statistics
+# - Insights (if available)
+```
+
+### Markdown
+
+Plain text format:
+
+```{r report-markdown, eval = FALSE}
+generate_report(
+  result,
+  output_file = "report.md",
+  format = "markdown"
+)
+```
+
+### Multiple Formats
+
+Export to all formats at once:
+
+```{r report-all, eval = FALSE}
+generate_report(
+  result,
+  output_file = "comprehensive_report", # No extension
+  format = "all", # Creates .html, .docx, .xlsx, .md
+  template = "apa",
+  title = "Comprehensive Analysis",
+  author = "Your Name"
+)
+```
+
+## One-Step Workflow
+
+Analyze and report in a single function call:
+
+```{r workflow-complete, eval = FALSE}
+# Complete workflow: analyze + report
+analyze_and_report(
+  data = mtcars,
+  output_file = "mtcars_analysis",
+  analysis_type = "comprehensive",
+  format = "all",
+  template = "apa",
+  title = "Comprehensive Motor Trend Analysis",
+  author = "Your Name",
+  include_plots = TRUE
+)
+
+# This creates:
+# - mtcars_analysis.html (APA formatted)
+# - mtcars_analysis.docx (Word document)
+# - mtcars_analysis.xlsx (Excel workbook)
+# - mtcars_analysis.md (Markdown file)
+# All with plots, tables, and narrative insights
+```
+
+## Custom Report Components
+
+### Adding Custom Content
+
+```{r custom-report, eval = FALSE}
+# Create analysis
+result <- perform_descriptive_analysis(mtcars)
+
+# Add custom insights
+result$insights <- c(
+  result$insights,
+  "Custom insight: Cars with higher MPG tend to be lighter",
+  "Custom insight: Horsepower shows bimodal distribution"
+)
+
+# Add custom metadata
+result$metadata$custom_field <- "Custom value"
+result$metadata$analysis_date <- Sys.Date()
+
+# Generate report with custom content
+generate_report(
+  result,
+  output_file = "custom_report.html",
+  format = "html",
+  title = "Custom Analysis"
+)
+```
+
+### Creating Custom Tables
+
+```{r custom-tables, eval = FALSE}
+# Create custom summary tables
+tables <- list(
+  descriptive = perform_descriptive_analysis(mtcars)$statistics,
+  correlation = perform_correlation_analysis(mtcars)$correlations,
+  normality = perform_normality_analysis(mtcars)$normality_tests
+)
+
+# Export as Excel
+batch_export_tables(
+  tables,
+  output_file = "analysis_tables.xlsx",
+  format = "excel"
+)
+
+# Or as CSV
+batch_export_tables(
+  tables,
+  output_file = "analysis_tables", # Directory
+  format = "csv"
+)
+```
+
+## Best Practices
+
+### 1. Color Selection
+
+```{r best-colors, eval = FALSE}
+# Publications: subtle, low boldness
+pub_colors <- get_color_scheme("subtle", boldness = 2)
+
+# Presentations: bold, medium-high boldness
+pres_colors <- get_color_scheme("bold", boldness = 3)
+
+# Posters: vivid, high boldness
+poster_colors <- get_color_scheme("vivid", boldness = 4)
+
+# Always check accessibility
+check_color_accessibility(
+  foreground = pub_colors[1],
+  background = "#FFFFFF"
+)
+```
+
+### 2. Plot Export
+
+```{r best-export, eval = FALSE}
+# Publications: 300-600 DPI, PDF/PNG
+save_plot(plot, "figure1.pdf", width = 7, height = 5)
+save_plot(plot, "figure1.png", width = 7, height = 5, dpi = 600)
+
+# Presentations: 150-300 DPI, PNG
+save_plot(plot, "slide_figure.png", dpi = 150)
+
+# Posters: 300-600 DPI, large size
+save_plot(plot, "poster.png", width = 20, height = 15, dpi = 300)
+```
+
+### 3. Report Formatting
+
+```{r best-reports, eval = FALSE}
+# Match template to target venue
+generate_report(result, "journal_submission.docx",
+                format = "word", template = "apa")
+
+# Include all details in comprehensive format
+generate_report(result, "full_analysis",
+                format = "all", include_plots = TRUE)
+
+# Share data with Excel
+generate_report(result, "data_tables.xlsx", format = "excel")
+```
+
+### 4. Reproducibility
+
+```{r best-reproducibility, eval = FALSE}
+# Document your analysis completely
+result <- analyze_and_report(
+  data = mtcars,
+  output_file = "reproducible_analysis",
+  analysis_type = "comprehensive",
+  format = "all",
+  template = "default",
+  title = paste("Analysis performed on", Sys.Date()),
+  author = "Your Name",
+  include_plots = TRUE
+)
+
+# Save session info
+writeLines(
+  capture.output(sessionInfo()),
+  "session_info.txt"
+)
+```
+
+## Summary
+
+descriptR visualization and reporting features:
+
+1. **16 colorblind-safe palettes** across 4 schemes × 4 boldness levels
+2. **Automatic plot type selection** based on variable types
+3. **Diagnostic visualizations** for all analysis types
+4. **Multiple export formats**: PNG, PDF, SVG, TIFF, EPS
+5. **DPI control**: 72 (screen) to 1200+ (ultra high-res)
+6. **5 journal templates**: Default, APA, Nature, Science, NEJM
+7. **4 output formats**: HTML, Word, Excel, Markdown
+8. **One-step workflow**: `analyze_and_report()` does everything
+
+All visualizations are publication-ready with minimal customization required!

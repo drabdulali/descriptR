@@ -1,0 +1,862 @@
+---
+title: "Advanced Statistical Analysis with descriptR"
+author: "Abdul Ali"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced Statistical Analysis with descriptR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+This vignette covers advanced statistical methods available in **descriptR**, including effect sizes, normality testing, missing data analysis, outlier detection, multivariate methods, and advanced modeling techniques.
+
+```{r load-package, eval = FALSE}
+library(descriptR)
+library(dplyr) # For data manipulation
+```
+
+## Effect Sizes
+
+Effect sizes quantify the magnitude of differences or relationships, providing context beyond statistical significance.
+
+### Cohen's d (Independent Groups)
+
+Measures the standardized mean difference between two groups:
+
+```{r cohens-d, eval = FALSE}
+# Compare mpg between 4-cylinder and 8-cylinder cars
+mtcars_subset <- mtcars %>% filter(cyl %in% c(4, 8))
+
+result <- compute_cohens_d(
+  x = mtcars_subset$mpg[mtcars_subset$cyl == 4],
+  y = mtcars_subset$mpg[mtcars_subset$cyl == 8],
+  pooled = TRUE,
+  hedges = FALSE
+)
+
+print(result)
+# Effect size interpretation:
+# Small: |d| = 0.2
+# Medium: |d| = 0.5
+# Large: |d| = 0.8
+```
+
+### Hedges' g (Bias-Corrected)
+
+Use Hedges' g for small sample sizes:
+
+```{r hedges-g, eval = FALSE}
+result <- compute_cohens_d(
+  x = mtcars_subset$mpg[mtcars_subset$cyl == 4],
+  y = mtcars_subset$mpg[mtcars_subset$cyl == 8],
+  pooled = TRUE,
+  hedges = TRUE # Apply bias correction
+)
+
+print(result)
+```
+
+### Paired Comparisons
+
+For repeated measures or matched pairs:
+
+```{r paired-d, eval = FALSE}
+# Example: Before and after measurements
+before <- c(120, 125, 130, 135, 128)
+after <- c(115, 118, 125, 130, 122)
+
+result <- compute_cohens_d(
+  x = before,
+  y = after,
+  paired = TRUE
+)
+
+print(result)
+```
+
+### ANOVA Effect Sizes
+
+#### Eta-Squared (η²)
+
+Proportion of total variance explained:
+
+```{r eta-squared, eval = FALSE}
+# Fit ANOVA model
+model <- aov(mpg ~ factor(cyl), data = mtcars)
+
+# Compute eta-squared
+result <- compute_eta_squared(model, type = "partial")
+
+print(result)
+# Interpretation:
+# Small: η² = 0.01
+# Medium: η² = 0.06
+# Large: η² = 0.14
+```
+
+#### Omega-Squared (ω²)
+
+Less biased estimate than eta-squared:
+
+```{r omega-squared, eval = FALSE}
+result <- compute_omega_squared(model)
+
+print(result)
+```
+
+### Categorical Association
+
+#### Cramér's V
+
+Measures association between categorical variables:
+
+```{r cramers-v, eval = FALSE}
+# Create categorical variables
+mtcars_cat <- mtcars %>%
+  mutate(
+    cyl_cat = factor(cyl),
+    am_cat = factor(am, labels = c("Auto", "Manual"))
+  )
+
+result <- compute_cramers_v(
+  mtcars_cat$cyl_cat,
+  mtcars_cat$am_cat,
+  bias_correct = TRUE
+)
+
+print(result)
+# Interpretation:
+# Small: V = 0.1
+# Medium: V = 0.3
+# Large: V = 0.5
+```
+
+#### Phi Coefficient (2x2 Tables)
+
+For binary variables:
+
+```{r phi, eval = FALSE}
+result <- compute_phi(
+  mtcars_cat$am_cat,
+  factor(mtcars$vs)
+)
+
+print(result)
+```
+
+### Effect Size Conversion
+
+Convert between different effect size metrics:
+
+```{r convert-effect, eval = FALSE}
+# Convert Cohen's d to correlation
+r <- convert_effect_size(
+  value = 0.8,
+  from = "cohens_d",
+  to = "correlation"
+)
+
+# Convert odds ratio to Cohen's d
+d <- convert_effect_size(
+  value = 2.5,
+  from = "odds_ratio",
+  to = "cohens_d"
+)
+```
+
+### Comprehensive Effect Size Analysis
+
+Compute all applicable effect sizes:
+
+```{r all-effects, eval = FALSE}
+result <- compute_all_effect_sizes(
+  data = mtcars,
+  outcome = "mpg",
+  group = "cyl",
+  type = "auto" # Auto-detect appropriate effect sizes
+)
+
+print(result)
+```
+
+## Normality Assessment
+
+Comprehensive normality testing with multiple methods.
+
+### Multiple Normality Tests
+
+```{r normality-multi, eval = FALSE}
+result <- assess_normality(
+  mtcars,
+  vars = c("mpg", "hp", "wt"),
+  tests = c("shapiro", "ks", "anderson", "jarque", "dagostino"),
+  suggest_transformations = TRUE
+)
+
+# View test results
+print(result$test_results)
+
+# View overall assessment
+print(result$summary)
+
+# Transformation suggestions
+print(result$transformations)
+
+# Narrative insights
+cat(paste(result$insights, collapse = "\n"))
+```
+
+### Individual Tests
+
+#### Shapiro-Wilk Test
+
+Most powerful test for small to medium samples:
+
+```{r shapiro, eval = FALSE}
+result <- assess_normality(
+  mtcars,
+  vars = "mpg",
+  tests = "shapiro"
+)
+
+print(result$test_results)
+```
+
+#### Kolmogorov-Smirnov Test
+
+Better for larger samples:
+
+```{r ks-test, eval = FALSE}
+result <- assess_normality(
+  mtcars,
+  vars = "mpg",
+  tests = "ks"
+)
+```
+
+#### Anderson-Darling Test
+
+More sensitive to deviations in the tails:
+
+```{r anderson, eval = FALSE}
+result <- assess_normality(
+  mtcars,
+  vars = "mpg",
+  tests = "anderson"
+)
+```
+
+### Transformation Recommendations
+
+When data is non-normal, descriptR suggests appropriate transformations:
+
+```{r transformations, eval = FALSE}
+# Assess normality with transformation suggestions
+result <- assess_normality(
+  mtcars,
+  vars = "hp",
+  suggest_transformations = TRUE
+)
+
+# View suggestions
+print(result$transformations)
+
+# Apply suggested transformation
+if (!is.null(result$transformations)) {
+  transform <- result$transformations$suggested_transform[1]
+
+  if (transform == "log") {
+    mtcars$hp_log <- log(mtcars$hp)
+  } else if (transform == "sqrt") {
+    mtcars$hp_sqrt <- sqrt(mtcars$hp)
+  }
+}
+```
+
+## Missing Data Analysis
+
+Comprehensive missing data assessment with pattern detection and MCAR testing.
+
+### Complete Missing Data Analysis
+
+```{r missing-complete, eval = FALSE}
+# Create data with missing values
+data_na <- mtcars
+data_na$mpg[c(1, 5, 10)] <- NA
+data_na$hp[c(2, 5, 15)] <- NA
+data_na$wt[c(5, 20)] <- NA
+
+result <- analyze_missing(
+  data_na,
+  test_mcar = TRUE,
+  pattern_analysis = TRUE,
+  correlation_analysis = TRUE
+)
+
+# Summary statistics
+print(result$summary)
+
+# Missing patterns
+print(result$patterns)
+
+# MCAR test (Little's test)
+print(result$mcar_test)
+
+# Correlations between missingness indicators
+print(result$correlations)
+
+# Recommendations
+cat(paste(result$recommendations, collapse = "\n"))
+```
+
+### Missing Data Patterns
+
+Identify common patterns of missingness:
+
+```{r missing-patterns, eval = FALSE}
+# Analyze patterns
+result <- analyze_missing(
+  data_na,
+  pattern_analysis = TRUE
+)
+
+# View most common patterns
+print(head(result$patterns, 10))
+
+# Variables with highest missingness
+print(result$summary[order(-result$summary$pct_missing), ])
+```
+
+### MCAR Testing
+
+Test if data is Missing Completely At Random:
+
+```{r mcar-test, eval = FALSE}
+result <- analyze_missing(
+  data_na,
+  test_mcar = TRUE
+)
+
+if (result$mcar_test$p_value > 0.05) {
+  message("Data appears to be MCAR (p > .05)")
+} else {
+  message("Data may not be MCAR - investigate patterns")
+}
+```
+
+## Outlier Detection
+
+Multiple methods for detecting outliers with consensus approach.
+
+### Multiple Detection Methods
+
+```{r outliers-multi, eval = FALSE}
+result <- detect_outliers(
+  mtcars,
+  vars = c("mpg", "hp", "wt"),
+  methods = c("zscore", "iqr", "mad", "grubbs", "dixon", "rosner"),
+  consensus = TRUE,
+  min_methods = 2
+)
+
+# Overall summary
+print(result$summary)
+
+# Detailed results by method
+print(result$details)
+
+# Consensus outliers (flagged by multiple methods)
+print(result$consensus)
+
+# Insights
+cat(paste(result$insights, collapse = "\n"))
+```
+
+### Individual Detection Methods
+
+#### Z-Score Method
+
+Flags observations > 3 SD from mean:
+
+```{r zscore-outliers, eval = FALSE}
+result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = "zscore",
+  threshold = 3
+)
+
+print(result$details)
+```
+
+#### IQR Method
+
+Uses interquartile range (1.5 * IQR rule):
+
+```{r iqr-outliers, eval = FALSE}
+result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = "iqr",
+  multiplier = 1.5
+)
+```
+
+#### MAD Method
+
+Median Absolute Deviation (robust to outliers):
+
+```{r mad-outliers, eval = FALSE}
+result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = "mad"
+)
+```
+
+#### Grubbs' Test
+
+Statistical test for a single outlier:
+
+```{r grubbs-outliers, eval = FALSE}
+result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = "grubbs"
+)
+```
+
+### Consensus Approach
+
+Require agreement from multiple methods:
+
+```{r consensus-outliers, eval = FALSE}
+# Require at least 3 methods to agree
+result <- detect_outliers(
+  mtcars,
+  vars = "mpg",
+  methods = c("zscore", "iqr", "mad", "grubbs"),
+  consensus = TRUE,
+  min_methods = 3
+)
+
+# Only show robust outliers
+print(result$consensus)
+```
+
+## Principal Component Analysis
+
+Dimensionality reduction with comprehensive interpretation.
+
+### Basic PCA
+
+```{r pca-basic, eval = FALSE}
+result <- perform_pca(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp", "drat"),
+  scale = TRUE,
+  n_components = NULL, # Keep all
+  variance_threshold = 0.95
+)
+
+# Variance explained
+print(result$variance_explained)
+
+# Loadings
+print(result$loadings)
+
+# Insights
+cat(paste(result$insights, collapse = "\n"))
+```
+
+### Component Selection
+
+#### Kaiser Criterion
+
+Keep components with eigenvalues > 1:
+
+```{r kaiser, eval = FALSE}
+result <- perform_pca(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp", "drat"),
+  n_components = "kaiser"
+)
+
+print(paste("Components retained:", result$n_components_retained))
+```
+
+#### Variance Threshold
+
+Keep components explaining target variance:
+
+```{r variance-threshold, eval = FALSE}
+result <- perform_pca(
+  mtcars,
+  variance_threshold = 0.80
+)
+
+print(paste("Components for 80% variance:", result$n_components_retained))
+```
+
+### Component Interpretation
+
+```{r pca-interpret, eval = FALSE}
+result <- perform_pca(mtcars)
+
+# Interpret first component
+interp1 <- interpret_pca_component(result, component = 1, threshold = 0.3)
+print(interp1)
+
+# Get high loadings
+loadings1 <- get_pca_loadings(result, component = 1, threshold = 0.4)
+print(loadings1)
+```
+
+### PCA Scores
+
+Extract component scores for further analysis:
+
+```{r pca-scores, eval = FALSE}
+result <- perform_pca(mtcars)
+
+# Get all scores
+scores <- get_pca_scores(result)
+
+# Get specific components
+scores_12 <- get_pca_scores(result, components = c(1, 2))
+
+# Add to original data
+mtcars_pca <- cbind(mtcars, scores_12)
+```
+
+### Rotation Methods
+
+Apply rotation for interpretability:
+
+```{r pca-rotation, eval = FALSE}
+# Varimax rotation (orthogonal)
+result_varimax <- perform_pca(
+  mtcars,
+  rotation = "varimax"
+)
+
+# Oblique rotation
+result_promax <- perform_pca(
+  mtcars,
+  rotation = "promax"
+)
+
+# Compare loadings
+print(result_varimax$loadings)
+print(result_promax$loadings)
+```
+
+## Exploratory Factor Analysis
+
+Extract latent factors from observed variables.
+
+### Basic EFA
+
+```{r efa-basic, eval = FALSE}
+result <- perform_efa(
+  mtcars,
+  vars = c("mpg", "hp", "wt", "disp", "drat", "qsec"),
+  n_factors = NULL, # Auto-determine
+  rotation = "varimax",
+  scores = TRUE
+)
+
+# Factor loadings
+print(result$loadings)
+
+# Variance explained
+print(result$variance)
+
+# Model fit
+print(result$fit)
+
+# Insights
+cat(paste(result$insights, collapse = "\n"))
+```
+
+### Factor Retention
+
+#### Parallel Analysis
+
+Compare eigenvalues to random data:
+
+```{r parallel-analysis, eval = FALSE}
+result <- perform_efa(
+  mtcars,
+  n_factors = "parallel"
+)
+
+print(paste("Factors suggested by parallel analysis:", result$n_factors))
+```
+
+#### Scree Plot Criteria
+
+Visual inspection of eigenvalue drop:
+
+```{r scree-efa, eval = FALSE}
+result <- perform_efa(
+  mtcars,
+  n_factors = "scree"
+)
+```
+
+### Rotation Methods
+
+#### Varimax (Orthogonal)
+
+Assumes uncorrelated factors:
+
+```{r varimax, eval = FALSE}
+result <- perform_efa(
+  mtcars,
+  n_factors = 3,
+  rotation = "varimax"
+)
+```
+
+#### Promax (Oblique)
+
+Allows correlated factors:
+
+```{r promax, eval = FALSE}
+result <- perform_efa(
+  mtcars,
+  n_factors = 3,
+  rotation = "promax"
+)
+
+# Factor correlations
+print(result$factor_correlations)
+```
+
+### Factor Interpretation
+
+```{r efa-interpret, eval = FALSE}
+result <- perform_efa(mtcars, n_factors = 2)
+
+# Interpret factors based on high loadings
+for (i in 1:result$n_factors) {
+  cat(sprintf("\n--- Factor %d ---\n", i))
+
+  # Variables with loadings > 0.4
+  high_loadings <- result$loadings[abs(result$loadings[, i]) > 0.4, i]
+  print(sort(high_loadings, decreasing = TRUE))
+}
+```
+
+## Generalized Linear Models
+
+Fit and compare GLMs with automatic family detection.
+
+### Automatic Family Selection
+
+```{r glm-auto, eval = FALSE}
+# Auto-detect appropriate family based on outcome
+result <- perform_glm(
+  formula = mpg ~ hp + wt + cyl,
+  data = mtcars,
+  family = "auto",
+  diagnostics = TRUE
+)
+
+# Model summary
+print(result$summary)
+
+# Diagnostics
+print(result$diagnostics)
+
+# Insights
+cat(paste(result$insights, collapse = "\n"))
+```
+
+### Specific Families
+
+#### Gaussian (Linear Regression)
+
+```{r glm-gaussian, eval = FALSE}
+result <- perform_glm(
+  formula = mpg ~ hp + wt,
+  data = mtcars,
+  family = "gaussian"
+)
+
+print(result$coefficients)
+```
+
+#### Binomial (Logistic Regression)
+
+```{r glm-binomial, eval = FALSE}
+result <- perform_glm(
+  formula = am ~ mpg + hp,
+  data = mtcars,
+  family = "binomial"
+)
+
+# Odds ratios
+print(exp(result$coefficients$estimate))
+```
+
+#### Poisson (Count Data)
+
+```{r glm-poisson, eval = FALSE}
+result <- perform_glm(
+  formula = cyl ~ mpg + hp,
+  data = mtcars,
+  family = "poisson"
+)
+```
+
+### Model Diagnostics
+
+Comprehensive diagnostic checks:
+
+```{r glm-diagnostics, eval = FALSE}
+result <- perform_glm(
+  formula = mpg ~ hp + wt,
+  data = mtcars,
+  diagnostics = TRUE
+)
+
+# Residual diagnostics
+print(result$diagnostics$residual_checks)
+
+# Influence measures
+print(result$diagnostics$influential_points)
+
+# Model fit
+print(result$diagnostics$goodness_of_fit)
+```
+
+### Model Comparison
+
+Compare multiple models:
+
+```{r model-comparison, eval = FALSE}
+# Fit several models
+model1 <- perform_glm(mpg ~ hp, data = mtcars)
+model2 <- perform_glm(mpg ~ hp + wt, data = mtcars)
+model3 <- perform_glm(mpg ~ hp + wt + cyl, data = mtcars)
+
+# Compare using AIC
+comparison <- compare_models(
+  model1,
+  model2,
+  model3,
+  criterion = "aic"
+)
+
+print(comparison)
+
+# Best model
+best_model <- comparison$models[[which.min(comparison$criterion_values)]]
+```
+
+## Non-Parametric Tests
+
+Alternative tests when assumptions are violated.
+
+### Mann-Whitney U Test
+
+Non-parametric alternative to t-test:
+
+```{r mann-whitney, eval = FALSE}
+result <- perform_mann_whitney(
+  x = mtcars$mpg[mtcars$am == 0],
+  y = mtcars$mpg[mtcars$am == 1],
+  alternative = "two.sided"
+)
+
+print(result)
+# Includes rank-biserial correlation (effect size)
+```
+
+### Kruskal-Wallis Test
+
+Non-parametric alternative to ANOVA:
+
+```{r kruskal-wallis, eval = FALSE}
+result <- perform_kruskal_wallis(
+  formula = mpg ~ factor(cyl),
+  data = mtcars,
+  post_hoc = TRUE
+)
+
+# Overall test
+print(result$test)
+
+# Post-hoc comparisons (Dunn's test)
+print(result$post_hoc)
+
+# Effect size (epsilon-squared)
+print(result$effect_size)
+```
+
+### Wilcoxon Signed-Rank Test
+
+Paired non-parametric test:
+
+```{r wilcoxon, eval = FALSE}
+before <- c(120, 125, 130, 135, 128)
+after <- c(115, 118, 125, 130, 122)
+
+result <- perform_wilcoxon_signed(
+  x = before,
+  y = after,
+  paired = TRUE
+)
+
+print(result)
+```
+
+### Friedman Test
+
+Non-parametric repeated measures ANOVA:
+
+```{r friedman, eval = FALSE}
+# Requires data in long format with blocking variable
+result <- perform_friedman(
+  formula = value ~ condition | subject,
+  data = my_repeated_measures_data
+)
+
+print(result)
+# Includes Kendall's W (effect size)
+```
+
+## Summary
+
+This vignette covered:
+
+1. **Effect Sizes**: Cohen's d, Hedges' g, η², ω², Cramér's V, phi
+2. **Normality Testing**: Multiple tests with transformation suggestions
+3. **Missing Data**: Pattern analysis, MCAR testing, recommendations
+4. **Outlier Detection**: Multiple methods with consensus approach
+5. **PCA**: Component extraction, interpretation, rotation
+6. **EFA**: Factor extraction, rotation, interpretation
+7. **GLM**: Automatic family selection, diagnostics, comparison
+8. **Non-Parametric Tests**: Rank-based alternatives
+
+All methods include:
+- Comprehensive output
+- Effect sizes where applicable
+- Narrative insights
+- Publication-ready results
+
+For visualization of these analyses, see the "Visualization and Reporting" vignette.
