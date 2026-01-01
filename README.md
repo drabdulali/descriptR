@@ -480,34 +480,312 @@ export_plots(
 
 ### **Color Schemes**
 
-#### `get_color_scheme()` - Colorblind-Safe Palettes
-**Purpose:** Get publication-ready, colorblind-safe color palettes
+descriptR provides **16 colorblind-safe palettes** (4 schemes × 4 boldness levels) tested for deuteranopia, protanopia, and tritanopia. All palettes are publication-ready and accessible.
+
+#### `get_color_scheme()` - Get Color Palette
+**Purpose:** Retrieve publication-ready, colorblind-safe color palettes
 
 ```r
 colors <- get_color_scheme(
-  scheme = "medium",  # "subtle", "medium", "bold", "vivid"
-  boldness = 2,       # 1-4
-  n = 8              # Number of colors needed
+  scheme = "medium",        # "subtle", "medium", "bold", "vivid"
+  boldness = 2,             # 1 (lightest) to 4 (boldest)
+  n = 8,                    # Number of colors needed
+  colorblind_safe = TRUE,   # Ensure colorblind safety (default)
+  reverse = FALSE           # Reverse palette order
 )
 ```
 
-**16 Total Combinations:**
-- **Subtle** (1-4): Muted colors for publications
-- **Medium** (1-4): Balanced (default)
-- **Bold** (1-4): High saturation for presentations
-- **Vivid** (1-4): Maximum impact for posters
+#### All 16 Color Scheme Combinations
+
+**1. SUBTLE (Pastels) - For Publications**
+
+| Boldness | Description | Use Case | Example Colors |
+|----------|-------------|----------|----------------|
+| 1 | Very light pastels | Background elements, watermarks | `#E8F4F8`, `#F0E8F8`, `#F8E8F0` |
+| 2 | Light pastels | Subtle differences, heatmaps | `#C5E3ED`, `#DCC5ED`, `#EDC5DC` |
+| 3 | Medium pastels | General publication figures | `#9FD2E2`, `#C89FE2`, `#E29FC8` |
+| 4 | Deep pastels | Emphasized publication figures | `#7AC1D7`, `#B47AD7`, `#D77AB4` |
 
 **Example:**
 ```r
-# Get colors
-colors <- get_color_scheme("bold", 3, n = 5)
+# Subtle scheme for Nature journal
+colors_subtle <- get_color_scheme("subtle", boldness = 3, n = 5)
 
-# Use in ggplot
 library(ggplot2)
-ggplot(iris, aes(Sepal.Length, Petal.Length, color = Species)) +
-  geom_point() +
-  scale_color_manual(values = colors)
+ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors_subtle) +
+  theme_minimal()
 ```
+
+**2. MEDIUM (Balanced) - General Purpose (DEFAULT)**
+
+| Boldness | Description | Use Case | Example Colors |
+|----------|-------------|----------|----------------|
+| 1 | Light balanced | Soft visualizations | `#A8D5E2`, `#D2A8E2`, `#E2A8D2` |
+| 2 | Standard balanced | Most publications (DEFAULT) | `#6FB8D4`, `#B86FD4`, `#D46FB8` |
+| 3 | Saturated balanced | Emphasis without harshness | `#4A9FBF`, `#9F4ABF`, `#BF4A9F` |
+| 4 | Deep balanced | Strong but professional | `#2E86A9`, `#862EA9`, `#A92E86` |
+
+**Example:**
+```r
+# Medium scheme (default) - most common use
+colors_medium <- get_color_scheme("medium", boldness = 2, n = 3)
+
+ggplot(mtcars, aes(x = wt, y = mpg, color = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_color_manual(values = colors_medium) +
+  theme_classic()
+```
+
+**3. BOLD (High Contrast) - For Presentations**
+
+| Boldness | Description | Use Case | Example Colors |
+|----------|-------------|----------|----------------|
+| 1 | Bright colors | Digital presentations | `#5DADE2`, `#AD5DE2`, `#E25DAD` |
+| 2 | Strong colors | Conference posters | `#3498DB`, `#9834DB`, `#DB3498` |
+| 3 | Very strong colors | Large screens, emphasis | `#2E86C1`, `#862EC1`, `#C12E86` |
+| 4 | Maximum saturation | Maximum visual impact | `#21618C`, `#61218C`, `#8C2161` |
+
+**Example:**
+```r
+# Bold scheme for presentation
+colors_bold <- get_color_scheme("bold", boldness = 3, n = 4)
+
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, color = Species)) +
+  geom_point(size = 4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = colors_bold) +
+  theme_dark() +
+  theme(text = element_text(size = 16))
+```
+
+**4. VIVID (Vibrant) - For Digital/Infographics**
+
+| Boldness | Description | Use Case | Example Colors |
+|----------|-------------|----------|----------------|
+| 1 | Vibrant light | Web dashboards | `#00D9FF`, `#D900FF`, `#FF00D9` |
+| 2 | Vibrant medium | Digital infographics | `#00B8D4`, `#B800D4`, `#D400B8` |
+| 3 | Vibrant deep | Interactive visualizations | `#00A3C4`, `#A300C4`, `#C400A3` |
+| 4 | Neon-like intensity | Digital art, eye-catching graphics | `#008CAA`, `#8C00AA`, `#AA008C` |
+
+**Example:**
+```r
+# Vivid scheme for web dashboard
+colors_vivid <- get_color_scheme("vivid", boldness = 2, n = 5)
+
+ggplot(mtcars, aes(x = factor(cyl), fill = factor(gear))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = colors_vivid) +
+  theme_minimal() +
+  labs(title = "Engine Cylinders vs Gears")
+```
+
+#### Complete Visualization Examples with Color Schemes
+
+**Example 1: Scatter Plot with Medium Scheme**
+```r
+library(descriptR)
+library(ggplot2)
+
+# Get medium colors
+colors <- get_color_scheme("medium", boldness = 2, n = 3)
+
+# Create scatter plot
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, color = Species)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = colors) +
+  theme_minimal() +
+  labs(title = "Iris Measurements",
+       subtitle = "Using medium color scheme (boldness = 2)")
+```
+
+**Example 2: Grouped Boxplot with Bold Scheme**
+```r
+# Bold scheme for presentation
+colors_bold <- get_color_scheme("bold", boldness = 3, n = 3)
+
+ggplot(iris, aes(x = Species, y = Sepal.Width, fill = Species)) +
+  geom_boxplot(alpha = 0.8) +
+  scale_fill_manual(values = colors_bold) +
+  theme_classic(base_size = 14) +
+  labs(title = "Sepal Width by Species",
+       subtitle = "Bold color scheme for presentations")
+```
+
+**Example 3: Correlation Heatmap with Subtle Scheme**
+```r
+# Correlation matrix
+cor_matrix <- cor(mtcars[, 1:7])
+
+# Subtle colors for heatmap
+colors_subtle <- get_color_scheme("subtle", boldness = 3, n = 100)
+
+library(reshape2)
+melted_cor <- melt(cor_matrix)
+
+ggplot(melted_cor, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradientn(colors = colors_subtle) +
+  theme_minimal() +
+  labs(title = "Correlation Heatmap",
+       subtitle = "Subtle color scheme")
+```
+
+**Example 4: Bar Chart with Vivid Scheme**
+```r
+# Count data
+gear_counts <- as.data.frame(table(mtcars$gear))
+colnames(gear_counts) <- c("Gears", "Count")
+
+# Vivid colors
+colors_vivid <- get_color_scheme("vivid", boldness = 2, n = 3)
+
+ggplot(gear_counts, aes(x = Gears, y = Count, fill = Gears)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = colors_vivid) +
+  theme_minimal() +
+  labs(title = "Number of Gears Distribution")
+```
+
+#### Advanced Color Functions
+
+**Preview Color Scheme**
+```r
+# Preview colors before using
+preview_color_scheme("medium", boldness = 2, n = 8)
+# Displays color codes and visual preview
+```
+
+**Get Scheme Recommendations**
+```r
+# Get recommended scheme for variable type and context
+rec <- get_scheme_for_type(
+  var_type = "categorical",   # "continuous", "categorical", "diverging", "sequential"
+  context = "publication"     # "publication", "presentation", "web"
+)
+
+# Use recommended colors
+colors <- get_color_scheme(rec$scheme, rec$boldness)
+```
+
+**Create Diverging Palette**
+```r
+# For data with meaningful midpoint (e.g., correlation, change)
+diverging_colors <- create_diverging_palette(
+  low_color = "#3498DB",    # Blue for negative
+  mid_color = "#FFFFFF",    # White for zero
+  high_color = "#E74C3C",   # Red for positive
+  n = 11                    # Odd number recommended
+)
+
+# Use in correlation heatmap
+cor_data <- cor(mtcars[, 1:5])
+library(reshape2)
+melted <- melt(cor_data)
+
+ggplot(melted, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradientn(colors = diverging_colors, limits = c(-1, 1)) +
+  theme_minimal()
+```
+
+**Create Sequential Palette**
+```r
+# For ordered data (e.g., temperature, density)
+sequential_colors <- create_sequential_palette(
+  base_color = "#3498DB",
+  n = 9,
+  direction = "light_to_dark"
+)
+
+# Use for density visualization
+ggplot(faithful, aes(x = eruptions, y = waiting)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  scale_fill_gradientn(colors = sequential_colors) +
+  theme_minimal()
+```
+
+**Check Color Accessibility**
+```r
+# Ensure colors meet WCAG guidelines
+check <- check_color_accessibility(
+  foreground = "#3498DB",
+  background = "#FFFFFF",
+  level = "AA"  # or "AAA"
+)
+
+print(check)
+# Shows contrast ratio and pass/fail for normal and large text
+```
+
+**Export Color Palette**
+```r
+# Export for use in other software
+colors <- get_color_scheme("medium", boldness = 2, n = 5)
+
+# As hex codes
+export_color_palette(colors, format = "hex")
+
+# As RGB
+export_color_palette(colors, format = "rgb")
+# Output: "rgb(111, 184, 212)" ...
+
+# As CSS variables
+export_color_palette(colors, format = "css", name = "my_palette")
+# Output: :root { --my_palette-1: #6FB8D4; ... }
+
+# As R code
+export_color_palette(colors, format = "r", name = "my_colors")
+# Output: my_colors <- c("#6FB8D4", ...)
+```
+
+#### Using Color Schemes in descriptR Functions
+
+All descriptR plotting functions automatically use appropriate color schemes:
+
+```r
+# plot_variable() uses context-appropriate colors
+plot_variable(
+  iris,
+  x = "Species",
+  y = "Sepal.Length",
+  color_scheme = "bold",    # Scheme name
+  boldness = 3              # Boldness level
+)
+
+# analyze_all() generates all plots with consistent colors
+analyze_all(
+  iris,
+  "output",
+  format = "all",
+  color_scheme = "medium",  # All 50+ plots use this scheme
+  boldness = 2
+)
+```
+
+#### Color Scheme Quick Reference
+
+| Context | Recommended Scheme | Boldness | Reason |
+|---------|-------------------|----------|--------|
+| Journal publication | Subtle or Medium | 2-3 | Professional, not distracting |
+| Presentation | Bold | 3 | High visibility, impact |
+| Poster | Bold or Vivid | 3-4 | Attracts attention |
+| Web/Digital | Vivid | 2 | Optimized for screens |
+| Print (grayscale) | Medium | 2 | Converts well to grayscale |
+| Accessibility focus | Medium | 2 | Best contrast ratios |
+| Heatmap | Subtle | 3 | Gradients without harshness |
+| Categorical (3-5 groups) | Medium | 2 | Clear differentiation |
+| Categorical (6+ groups) | Bold | 2-3 | More distinction needed |
+
+#### Colorblind Safety
+
+All 16 palettes tested for:
+- **Deuteranopia** (red-green, most common ~5% males)
+- **Protanopia** (red-green)
+- **Tritanopia** (blue-yellow, rare)
+
+Colors remain distinguishable for all three types of colorblindness.
 
 ---
 
