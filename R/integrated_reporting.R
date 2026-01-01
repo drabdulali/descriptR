@@ -672,6 +672,53 @@ perform_comprehensive_analysis <- function(data, vars = NULL, group = NULL, ...)
     )
   }
 
+  # NEW PHASE 1 ANALYSES
+
+  # Regression Analysis (if multiple predictors available)
+  if (length(numeric_vars) >= 2) {
+    results$regression <- tryCatch({
+      # Use first numeric variable as outcome, rest as predictors
+      outcome_var <- numeric_vars[1]
+      predictor_vars <- numeric_vars[-1]
+
+      perform_regression_analysis(
+        data,
+        outcome = outcome_var,
+        predictors = predictor_vars,
+        type = "auto",
+        diagnostics = TRUE
+      )
+    }, error = function(e) NULL)
+  }
+
+  # ANOVA Analysis (if group variable specified)
+  if (!is.null(group) && group %in% names(data) && length(numeric_vars) > 0) {
+    results$anova <- tryCatch({
+      # Run ANOVA for first numeric variable by group
+      perform_anova(
+        data,
+        outcome = numeric_vars[1],
+        groups = group,
+        type = "auto",
+        post_hoc = "auto",
+        effect_size = TRUE
+      )
+    }, error = function(e) NULL)
+  }
+
+  # Missing Data Imputation (if missing data present)
+  if (any(sapply(data[vars], function(x) any(is.na(x))))) {
+    results$imputation <- tryCatch({
+      # Create imputed dataset
+      impute_missing(
+        data,
+        method = "auto",
+        vars = NULL,  # Auto-select vars with missing data
+        diagnostics = TRUE
+      )
+    }, error = function(e) NULL)
+  }
+
   # Compile insights from all analyses
   all_insights <- unlist(lapply(results, function(r) {
     if (!is.null(r) && !is.null(r$insights)) r$insights else character()

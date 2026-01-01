@@ -159,8 +159,11 @@ analyze_all(mtcars, "custom", interactive = TRUE)
 3. **Normality Tests** - Shapiro-Wilk, Anderson-Darling, visual QQ plots
 4. **Outlier Detection** - Z-score method with visualization
 5. **Correlation Analysis** - Pairwise correlations with p-values and heatmap
-6. **Grouped Comparisons** - If grouping variable specified
-7. **50+ Visualizations** - See visualization section below
+6. **Regression Analysis** - Linear, logistic, Poisson with diagnostics and VIF
+7. **ANOVA/MANOVA** - Automatic detection with post-hoc tests and effect sizes (if group specified)
+8. **Missing Data Imputation** - Auto-select best method with quality diagnostics
+9. **Grouped Comparisons** - If grouping variable specified
+10. **50+ Visualizations** - See visualization section below
 
 ---
 
@@ -190,6 +193,9 @@ analyze_and_report(
 - `"missing"` - Missing data analysis
 - `"outliers"` - Outlier detection
 - `"pca"` - Principal Component Analysis
+- `"regression"` - Regression analysis (linear, logistic, Poisson)
+- `"anova"` - ANOVA/MANOVA with post-hoc tests
+- `"imputation"` - Missing data imputation
 - `"comprehensive"` - All of the above (same as `analyze_all()`)
 
 **Examples:**

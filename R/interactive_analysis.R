@@ -301,9 +301,12 @@ analyze_all <- function(data,
   cat("- Normality tests\n")
   cat("- Outlier detection\n")
   cat("- Correlation analysis\n")
+  cat("- Regression analysis\n")
   if (!is.null(group)) {
     cat("- Grouped analysis by", group, "\n")
+    cat("- ANOVA/MANOVA analysis\n")
   }
+  cat("- Missing data imputation\n")
   cat("\n")
 
   result <- perform_comprehensive_analysis(data, vars, group, ...)
