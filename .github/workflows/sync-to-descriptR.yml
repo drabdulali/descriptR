@@ -1,0 +1,40 @@
+name: Sync to descriptR branch
+
+on:
+  push:
+    branches:
+      - 'claude/descriptR-package-development-bNohf'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: claude/descriptR-package-development-bNohf
+
+      - name: Configure Git
+        run: |
+          git config user.name "Abdul Ali"
+          git config user.email "abdulali.wallana125@gmail.com"
+
+      - name: Create or update descriptR branch
+        run: |
+          # Check if descriptR branch exists on remote
+          if git ls-remote --heads origin descriptR | grep descriptR; then
+            echo "descriptR branch exists, updating it"
+            git checkout descriptR
+            git pull origin descriptR
+            git merge --ff-only origin/claude/descriptR-package-development-bNohf || \
+            git merge --no-ff origin/claude/descriptR-package-development-bNohf -m "Sync from development branch"
+          else
+            echo "Creating new descriptR branch"
+            git checkout -b descriptR
+          fi
+
+          git push origin descriptR
