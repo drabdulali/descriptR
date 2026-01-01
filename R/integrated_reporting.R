@@ -1104,7 +1104,7 @@ generate_comprehensive_plots <- function(data, result = NULL, vars = NULL, group
     }, error = function(e) NULL)
   }
 
-  message(sprintf("✅ Generated %d visualizations", length(plots)))
+  message(sprintf("Generated %d visualizations", length(plots)))
   return(plots)
 }
 

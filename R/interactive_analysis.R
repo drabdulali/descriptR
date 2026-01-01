@@ -320,7 +320,7 @@ analyze_all <- function(data,
   )
 
   cat("\n")
-  cat("✅ Analysis complete!\n")
+  cat("Analysis complete!\n")
   cat("\n")
   cat("Generated files:\n")
   for (path in report_paths) {
