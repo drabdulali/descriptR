@@ -6,8 +6,7 @@ Date: 2025-12-31
 Authors@R: c(
     person("Abdul", "Ali",
            email = "dr.abdulali@example.com",
-           role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0000-0000-0000"))
+           role = c("aut", "cre"))
     )
 Description: A unified, intelligent R package for descriptive and inferential
     statistics that automatically detects variable types and applies appropriate
