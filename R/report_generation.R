@@ -739,8 +739,24 @@ generate_comprehensive_html <- function(content) {
           sprintf("    <h3>%s Analysis</h3>", section_title)
         )
 
-        # Statistics table
+        # Determine which data frame to display (different analyses use different field names)
+        data_frame <- NULL
         if (!is.null(analysis$statistics)) {
+          data_frame <- analysis$statistics
+        } else if (!is.null(analysis$missing_summary)) {
+          data_frame <- analysis$missing_summary
+        } else if (!is.null(analysis$outlier_summary)) {
+          data_frame <- analysis$outlier_summary
+        } else if (!is.null(analysis$normality_tests)) {
+          data_frame <- analysis$normality_tests
+        } else if (!is.null(analysis$correlations)) {
+          data_frame <- analysis$correlations
+        } else if (!is.null(analysis$by_group)) {
+          data_frame <- analysis$by_group
+        }
+
+        # Display table if we have data
+        if (!is.null(data_frame) && is.data.frame(data_frame) && nrow(data_frame) > 0) {
           html <- c(html,
             "    <table>",
             "      <thead>",
@@ -748,7 +764,7 @@ generate_comprehensive_html <- function(content) {
           )
 
           # Header
-          for (col in names(analysis$statistics)) {
+          for (col in names(data_frame)) {
             html <- c(html, sprintf("          <th>%s</th>", col))
           }
 
@@ -759,10 +775,10 @@ generate_comprehensive_html <- function(content) {
           )
 
           # Rows
-          for (i in 1:nrow(analysis$statistics)) {
+          for (i in 1:nrow(data_frame)) {
             html <- c(html, "        <tr>")
-            for (col in names(analysis$statistics)) {
-              val <- analysis$statistics[i, col]
+            for (col in names(data_frame)) {
+              val <- data_frame[i, col]
               val_str <- if (is.numeric(val)) sprintf("%.3f", val) else as.character(val)
               html <- c(html, sprintf("          <td>%s</td>", val_str))
             }
@@ -775,38 +791,13 @@ generate_comprehensive_html <- function(content) {
           )
         }
 
-        # by_group table (for grouped analysis)
-        if (!is.null(analysis$by_group)) {
-          html <- c(html,
-            "    <table>",
-            "      <thead>",
-            "        <tr>"
-          )
-
-          for (col in names(analysis$by_group)) {
-            html <- c(html, sprintf("          <th>%s</th>", col))
+        # Add analysis-specific insights
+        if (!is.null(analysis$insights) && length(analysis$insights) > 0) {
+          for (insight in analysis$insights) {
+            html <- c(html,
+              sprintf("    <div class='insight'>%s</div>", insight)
+            )
           }
-
-          html <- c(html,
-            "        </tr>",
-            "      </thead>",
-            "      <tbody>"
-          )
-
-          for (i in 1:nrow(analysis$by_group)) {
-            html <- c(html, "        <tr>")
-            for (col in names(analysis$by_group)) {
-              val <- analysis$by_group[i, col]
-              val_str <- if (is.numeric(val)) sprintf("%.3f", val) else as.character(val)
-              html <- c(html, sprintf("          <td>%s</td>", val_str))
-            }
-            html <- c(html, "        </tr>")
-          }
-
-          html <- c(html,
-            "      </tbody>",
-            "    </table>"
-          )
         }
       }
     }
@@ -919,19 +910,33 @@ generate_comprehensive_markdown <- function(content, include_interpretations) {
           ""
         )
 
-        # Statistics table
+        # Determine which data frame to display
+        data_frame <- NULL
         if (!is.null(analysis$statistics)) {
-          stats_df <- analysis$statistics
+          data_frame <- analysis$statistics
+        } else if (!is.null(analysis$missing_summary)) {
+          data_frame <- analysis$missing_summary
+        } else if (!is.null(analysis$outlier_summary)) {
+          data_frame <- analysis$outlier_summary
+        } else if (!is.null(analysis$normality_tests)) {
+          data_frame <- analysis$normality_tests
+        } else if (!is.null(analysis$correlations)) {
+          data_frame <- analysis$correlations
+        } else if (!is.null(analysis$by_group)) {
+          data_frame <- analysis$by_group
+        }
 
+        # Display table if we have data
+        if (!is.null(data_frame) && is.data.frame(data_frame) && nrow(data_frame) > 0) {
           # Create markdown table
-          header <- paste("|", paste(names(stats_df), collapse = " | "), "|")
-          separator <- paste("|", paste(rep("---", ncol(stats_df)), collapse = " | "), "|")
+          header <- paste("|", paste(names(data_frame), collapse = " | "), "|")
+          separator <- paste("|", paste(rep("---", ncol(data_frame)), collapse = " | "), "|")
 
           md <- c(md, header, separator)
 
           # Rows
-          for (i in 1:nrow(stats_df)) {
-            row_vals <- sapply(stats_df[i, ], function(x) {
+          for (i in 1:nrow(data_frame)) {
+            row_vals <- sapply(data_frame[i, ], function(x) {
               if (is.numeric(x)) sprintf("%.3f", x) else as.character(x)
             })
             row_str <- paste("|", paste(row_vals, collapse = " | "), "|")
@@ -941,23 +946,11 @@ generate_comprehensive_markdown <- function(content, include_interpretations) {
           md <- c(md, "")
         }
 
-        # by_group table
-        if (!is.null(analysis$by_group)) {
-          by_group_df <- analysis$by_group
-
-          header <- paste("|", paste(names(by_group_df), collapse = " | "), "|")
-          separator <- paste("|", paste(rep("---", ncol(by_group_df)), collapse = " | "), "|")
-
-          md <- c(md, header, separator)
-
-          for (i in 1:nrow(by_group_df)) {
-            row_vals <- sapply(by_group_df[i, ], function(x) {
-              if (is.numeric(x)) sprintf("%.3f", x) else as.character(x)
-            })
-            row_str <- paste("|", paste(row_vals, collapse = " | "), "|")
-            md <- c(md, row_str)
+        # Add analysis-specific insights
+        if (!is.null(analysis$insights) && length(analysis$insights) > 0) {
+          for (insight in analysis$insights) {
+            md <- c(md, sprintf("- %s", insight))
           }
-
           md <- c(md, "")
         }
       }
@@ -1039,32 +1032,33 @@ add_comprehensive_excel <- function(wb, content) {
         # Sheet name (Excel has 31 char limit)
         sheet_name <- substr(tools::toTitleCase(gsub("_", " ", analysis_name)), 1, 31)
 
-        # Add statistics
+        # Determine which data frame to export
+        data_frame <- NULL
         if (!is.null(analysis$statistics)) {
+          data_frame <- analysis$statistics
+        } else if (!is.null(analysis$missing_summary)) {
+          data_frame <- analysis$missing_summary
+        } else if (!is.null(analysis$outlier_summary)) {
+          data_frame <- analysis$outlier_summary
+        } else if (!is.null(analysis$normality_tests)) {
+          data_frame <- analysis$normality_tests
+        } else if (!is.null(analysis$correlations)) {
+          data_frame <- analysis$correlations
+        } else if (!is.null(analysis$by_group)) {
+          data_frame <- analysis$by_group
+        }
+
+        # Add data to Excel sheet
+        if (!is.null(data_frame) && is.data.frame(data_frame) && nrow(data_frame) > 0) {
           openxlsx::addWorksheet(wb, sheet_name)
-          openxlsx::writeData(wb, sheet_name, analysis$statistics)
+          openxlsx::writeData(wb, sheet_name, data_frame)
 
           # Format header
           openxlsx::addStyle(wb, sheet_name,
             style = openxlsx::createStyle(fgFill = "#3498db", fontColour = "white",
                                           textDecoration = "bold"),
             rows = 1,
-            cols = 1:ncol(analysis$statistics),
-            gridExpand = TRUE
-          )
-        }
-
-        # Add by_group if exists
-        if (!is.null(analysis$by_group)) {
-          sheet_name_grp <- substr(paste(sheet_name, "Groups"), 1, 31)
-          openxlsx::addWorksheet(wb, sheet_name_grp)
-          openxlsx::writeData(wb, sheet_name_grp, analysis$by_group)
-
-          openxlsx::addStyle(wb, sheet_name_grp,
-            style = openxlsx::createStyle(fgFill = "#3498db", fontColour = "white",
-                                          textDecoration = "bold"),
-            rows = 1,
-            cols = 1:ncol(analysis$by_group),
+            cols = 1:ncol(data_frame),
             gridExpand = TRUE
           )
         }
