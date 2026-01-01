@@ -1,7 +1,6 @@
 # descriptR
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/drabdulali/descriptR/workflows/R-CMD-check/badge.svg)](https://github.com/drabdulali/descriptR/actions)
 [![CRAN status](https://www.r-pkg.org/badges/version/descriptR)](https://CRAN.R-project.org/package=descriptR)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -14,22 +13,22 @@ The complete R package for descriptive and inferential statistics with **automat
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 🚀 **One Function Does Everything: `analyze_all()`**
+### **One Function Does Everything: `analyze_all()`**
 ```r
 # Run ALL analyses + Generate complete report with 50+ figures
 analyze_all(mtcars, "complete_analysis", format = "all")
 ```
 
 **What you get:**
-- ✅ **6 Statistical Analyses**: Descriptive, Missing Data, Normality, Outliers, Correlations, Grouped
-- ✅ **50+ Visualizations**: Histograms, Density, Boxplots, Violin, QQ Plots, Scatter, Heatmaps, more
-- ✅ **4 Output Formats**: HTML, Word (with embedded 300 DPI figures), Excel, Markdown
-- ✅ **Automated Insights**: Human-readable interpretations of results
-- ✅ **Publication Quality**: Professional formatting, colorblind-safe palettes
+- **6 Statistical Analyses**: Descriptive, Missing Data, Normality, Outliers, Correlations, Grouped
+- **50+ Visualizations**: Histograms, Density, Boxplots, Violin, QQ Plots, Scatter, Heatmaps, more
+- **4 Output Formats**: HTML, Word (with embedded 300 DPI figures), Excel, Markdown
+- **Automated Insights**: Human-readable interpretations of results
+- **Publication Quality**: Professional formatting, colorblind-safe palettes
 
-### 🎯 **Interactive Variable Selection**
+### **Interactive Variable Selection**
 ```r
 # Let the package guide you through variable selection
 analyze_all(iris, "iris_analysis", interactive = TRUE)
@@ -45,7 +44,7 @@ analyze_all(iris, "iris_analysis", interactive = TRUE)
 # Select variables (comma-separated numbers, or 0 for all): 1,2,3
 ```
 
-### 📊 **Word Documents with Embedded Figures**
+### **Word Documents with Embedded Figures**
 Every Word report includes:
 - Complete statistical tables
 - **ALL visualizations embedded** as high-resolution (300 DPI) PNG images
@@ -53,7 +52,7 @@ Every Word report includes:
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```r
 # From GitHub (recommended - latest features)
@@ -65,7 +64,7 @@ install.packages("descriptR")
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Option 1: Complete Analysis (Recommended)
 
@@ -111,9 +110,9 @@ analyze_and_report(
 
 ---
 
-## 📚 Complete Function Reference
+## Complete Function Reference
 
-### 🎯 **Master Functions** (Start Here!)
+### **Master Functions** (Start Here!)
 
 #### `analyze_all()` - ONE Function for Everything
 **Purpose:** Performs ALL statistical analyses and generates comprehensive report with all visualizations
@@ -207,7 +206,7 @@ analyze_and_report(mtcars, "corr", analysis_type = "correlation")
 
 ---
 
-### 🎨 **Interactive Functions**
+### **Interactive Functions**
 
 #### `select_variables()` - Interactive Variable Selection
 **Purpose:** Choose which variables to analyze via interactive menu
@@ -248,7 +247,7 @@ group <- select_grouping_variable(iris)
 
 ---
 
-### 📊 **Statistical Analysis Functions**
+### **Statistical Analysis Functions**
 
 #### `perform_descriptive_analysis()` - Descriptive Statistics
 **Purpose:** Calculate comprehensive descriptive statistics
@@ -367,7 +366,7 @@ result <- perform_pca_analysis(
 
 ---
 
-### 🎨 **Visualization Functions**
+### **Visualization Functions**
 
 #### `plot_variable()` - Smart Automatic Plotting
 **Purpose:** Automatically creates the right plot type based on variable types
@@ -479,7 +478,7 @@ export_plots(
 
 ---
 
-### 🎨 **Color Schemes**
+### **Color Schemes**
 
 #### `get_color_scheme()` - Colorblind-Safe Palettes
 **Purpose:** Get publication-ready, colorblind-safe color palettes
@@ -512,7 +511,7 @@ ggplot(iris, aes(Sepal.Length, Petal.Length, color = Species)) +
 
 ---
 
-### 📄 **Report Generation Functions**
+### **Report Generation Functions**
 
 #### `generate_report()` - Create Formatted Reports
 **Purpose:** Generate professional reports from analysis results
@@ -575,7 +574,7 @@ batch_export_tables(tables, output_dir = "tables")
 
 ---
 
-## 📊 Complete Examples by Dataset
+## Complete Examples by Dataset
 
 ### Example 1: Motor Trend Cars (mtcars)
 
@@ -592,10 +591,10 @@ analyze_all(
 )
 
 # What you get:
-# ✅ mtcars_complete.html   - Interactive HTML report
-# ✅ mtcars_complete.docx   - Word with 50+ embedded figures (300 DPI)
-# ✅ mtcars_complete.xlsx   - Excel with multiple sheets
-# ✅ mtcars_complete.md     - Markdown for GitHub
+# mtcars_complete.html   - Interactive HTML report
+# mtcars_complete.docx   - Word with 50+ embedded figures (300 DPI)
+# mtcars_complete.xlsx   - Excel with multiple sheets
+# mtcars_complete.md     - Markdown for GitHub
 
 # The Word document contains:
 # 1. Descriptive Statistics for all 11 variables
@@ -627,10 +626,10 @@ analyze_all(
 )
 
 # Additional features with grouping:
-# ✅ Grouped Boxplots (4 variables × 3 species)
-# ✅ Violin Plots (distribution shapes)
-# ✅ Bar Plot (Species frequencies)
-# ✅ Group comparison statistics
+# Grouped Boxplots (4 variables × 3 species)
+# Violin Plots (distribution shapes)
+# Bar Plot (Species frequencies)
+# Group comparison statistics
 # Total: 60+ figures in Word document!
 ```
 
@@ -646,10 +645,10 @@ analyze_all(
 )
 
 # Special features for missing data:
-# ✅ Missing data pattern visualization
-# ✅ Percentage missing by variable
-# ✅ Recommendations for handling
-# ✅ Complete case analysis
+# Missing data pattern visualization
+# Percentage missing by variable
+# Recommendations for handling
+# Complete case analysis
 ```
 
 ### Example 4: Interactive Custom Analysis
@@ -709,41 +708,41 @@ analyze_and_report(
 
 ---
 
-## 🎨 Visualizations Generated by `analyze_all()`
+## Visualizations Generated by `analyze_all()`
 
 For a typical dataset with 10 numeric variables, `analyze_all()` generates **50+ publication-quality visualizations**:
 
-### 📊 Distribution Plots
+### Distribution Plots
 1. **Histograms** (10) - Distribution with density overlay for each variable
 2. **Density Plots** (10) - Smooth kernel density estimates
 3. **Boxplots** (10) - Median, quartiles, and outliers
 
-### 📈 Group Comparisons (if group specified)
+### Group Comparisons (if group specified)
 4. **Grouped Boxplots** (10) - Compare distributions across groups
 5. **Violin Plots** (5) - Distribution shapes by group
 
-### 🔍 Diagnostic Plots
+### Diagnostic Plots
 6. **QQ Plots** (10) - Normality assessment for ALL variables
 7. **Outlier Plots** (5) - Z-score outlier detection visualizations
 
-### 🔗 Relationship Plots
+### Relationship Plots
 8. **Scatter Plots** (5) - Pairwise relationships with trend lines
 9. **Correlation Heatmap** (1) - All pairwise correlations visualized
 
-### 📉 Data Quality
+### Data Quality
 10. **Missing Data Pattern** (1) - If missing data present
 11. **Bar Plots** - Categorical variable frequencies
 
 **All figures are:**
-- ✅ 300 DPI resolution (publication-quality)
-- ✅ Colorblind-safe palettes
-- ✅ Professional formatting
-- ✅ Embedded in Word documents
-- ✅ Saved as separate PNG files
+- 300 DPI resolution (publication-quality)
+- Colorblind-safe palettes
+- Professional formatting
+- Embedded in Word documents
+- Saved as separate PNG files
 
 ---
 
-## 📖 Complete Workflow Examples
+## Complete Workflow Examples
 
 ### Workflow 1: Publication-Ready Analysis
 
@@ -808,7 +807,7 @@ analyze_all(
 
 ---
 
-## 💡 Tips & Best Practices
+## Tips & Best Practices
 
 ### When to Use Each Function
 
@@ -846,7 +845,7 @@ analyze_all(
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 ### Vignettes
 1. [Getting Started](vignettes/getting-started.Rmd) - Quick start guide
@@ -870,7 +869,7 @@ help(package = "descriptR")
 
 ---
 
-## 🔧 Advanced Usage
+## Advanced Usage
 
 ### Custom Workflows
 
@@ -913,7 +912,7 @@ for (name in names(datasets)) {
 
 ---
 
-## 📊 Package Statistics
+## Package Statistics
 
 - **Total Functions**: 65+
 - **Statistical Methods**: 30+
@@ -926,7 +925,7 @@ for (name in names(datasets)) {
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome! Please:
 
@@ -936,7 +935,7 @@ Contributions welcome! Please:
 
 ---
 
-## 📝 Citation
+## Citation
 
 ```bibtex
 @Manual{descriptR,
@@ -950,21 +949,21 @@ Contributions welcome! Please:
 
 ---
 
-## 📜 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Abdul Ali**
-- 📧 Email: dr.abdulali@example.com
-- 🐙 GitHub: [@drabdulali](https://github.com/drabdulali)
+- Email: dr.abdulali@example.com
+- GitHub: [@drabdulali](https://github.com/drabdulali)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - R Core Team for maintaining R
 - Tidyverse team for foundational packages
@@ -973,11 +972,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version**: 0.1.0 | **Status**: ✅ Stable | **Release**: 2025-12-31
+**Version**: 0.1.0 | **Status**: Stable | **Release**: 2025-12-31
 
 ---
 
-## 🚀 What's Next?
+## What's Next?
 
 ```r
 # Install now and start analyzing!
@@ -988,4 +987,4 @@ library(descriptR)
 analyze_all(mtcars, "my_first_analysis", format = "all")
 ```
 
-**Happy Analyzing! 📊✨**
+**Happy Analyzing!**
