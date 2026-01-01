@@ -134,7 +134,21 @@ extract_report_content <- function(result, include_interpretations) {
   content <- list()
 
   # Handle different result types
-  if (inherits(result, "descriptR")) {
+  if (inherits(result, "descriptR_comprehensive")) {
+    # Comprehensive analysis result
+    content$type <- "comprehensive"
+    content$analyses <- result$analyses
+    content$insights <- if (include_interpretations) result$insights else NULL
+    content$metadata <- result$metadata
+
+  } else if (inherits(result, "descriptR_result")) {
+    # Single analysis result (descriptive, correlation, normality, missing, outliers)
+    content$type <- "descriptive"
+    content$statistics <- result$statistics
+    content$insights <- if (include_interpretations) result$insights else NULL
+    content$metadata <- result$metadata
+
+  } else if (inherits(result, "descriptR")) {
     # describe_data result
     content$type <- "descriptive"
     content$statistics <- result$statistics
@@ -145,7 +159,8 @@ extract_report_content <- function(result, include_interpretations) {
   } else if (inherits(result, "descriptR_grouped")) {
     # describe_grouped result
     content$type <- "grouped"
-    content$statistics <- result$combined_statistics
+    content$statistics <- result$by_group
+    content$insights <- if (include_interpretations) result$insights else NULL
     content$tests <- result$tests
 
   } else if (inherits(result, "descriptR_comparison")) {
@@ -210,7 +225,9 @@ generate_html_report <- function(content, output_file, metadata, template,
   )
 
   # Content based on type
-  if (content$type == "descriptive") {
+  if (content$type == "comprehensive") {
+    html <- c(html, generate_comprehensive_html(content))
+  } else if (content$type == "descriptive") {
     html <- c(html, generate_descriptive_html(content))
   } else if (content$type == "grouped") {
     html <- c(html, generate_grouped_html(content))
@@ -265,7 +282,9 @@ generate_word_report <- function(content, output_file, metadata, template,
   doc <- officer::body_add_par(doc, "", style = "Normal")
 
   # Add content based on type
-  if (content$type == "descriptive") {
+  if (content$type == "comprehensive") {
+    doc <- add_comprehensive_word(doc, content)
+  } else if (content$type == "descriptive") {
     doc <- add_descriptive_word(doc, content)
   } else if (content$type == "grouped") {
     doc <- add_grouped_word(doc, content)
@@ -314,7 +333,9 @@ generate_excel_report <- function(content, output_file, metadata) {
   openxlsx::writeData(wb, "Metadata", meta_df)
 
   # Add content sheets based on type
-  if (content$type == "descriptive") {
+  if (content$type == "comprehensive") {
+    add_comprehensive_excel(wb, content)
+  } else if (content$type == "descriptive") {
     add_descriptive_excel(wb, content)
   } else if (content$type == "grouped") {
     add_grouped_excel(wb, content)
@@ -355,7 +376,9 @@ generate_markdown_report <- function(content, output_file, metadata,
   )
 
   # Add content based on type
-  if (content$type == "descriptive") {
+  if (content$type == "comprehensive") {
+    md <- c(md, generate_comprehensive_markdown(content, include_interpretations))
+  } else if (content$type == "descriptive") {
     md <- c(md, generate_descriptive_markdown(content, include_interpretations))
   } else if (content$type == "grouped") {
     md <- c(md, generate_grouped_markdown(content))
@@ -685,9 +708,169 @@ add_descriptive_excel <- function(wb, content) {
 # Similar functions for grouped, comparison, and PCA content...
 # (Abbreviated for space - same pattern as above)
 
+generate_comprehensive_html <- function(content) {
+  html <- c(
+    "    <h2>Comprehensive Analysis Report</h2>",
+    "    <p><strong>Note:</strong> This report includes multiple analyses performed on your data.</p>"
+  )
+
+  # Add insights summary
+  if (!is.null(content$insights) && length(content$insights) > 0) {
+    html <- c(html,
+      "    <h3>Key Insights Summary</h3>"
+    )
+
+    for (insight in content$insights) {
+      html <- c(html,
+        sprintf("    <div class='insight'>%s</div>", insight)
+      )
+    }
+  }
+
+  # Add each analysis section
+  if (!is.null(content$analyses)) {
+    for (analysis_name in names(content$analyses)) {
+      analysis <- content$analyses[[analysis_name]]
+
+      if (!is.null(analysis)) {
+        # Section header
+        section_title <- tools::toTitleCase(gsub("_", " ", analysis_name))
+        html <- c(html,
+          sprintf("    <h3>%s Analysis</h3>", section_title)
+        )
+
+        # Statistics table
+        if (!is.null(analysis$statistics)) {
+          html <- c(html,
+            "    <table>",
+            "      <thead>",
+            "        <tr>"
+          )
+
+          # Header
+          for (col in names(analysis$statistics)) {
+            html <- c(html, sprintf("          <th>%s</th>", col))
+          }
+
+          html <- c(html,
+            "        </tr>",
+            "      </thead>",
+            "      <tbody>"
+          )
+
+          # Rows
+          for (i in 1:nrow(analysis$statistics)) {
+            html <- c(html, "        <tr>")
+            for (col in names(analysis$statistics)) {
+              val <- analysis$statistics[i, col]
+              val_str <- if (is.numeric(val)) sprintf("%.3f", val) else as.character(val)
+              html <- c(html, sprintf("          <td>%s</td>", val_str))
+            }
+            html <- c(html, "        </tr>")
+          }
+
+          html <- c(html,
+            "      </tbody>",
+            "    </table>"
+          )
+        }
+
+        # by_group table (for grouped analysis)
+        if (!is.null(analysis$by_group)) {
+          html <- c(html,
+            "    <table>",
+            "      <thead>",
+            "        <tr>"
+          )
+
+          for (col in names(analysis$by_group)) {
+            html <- c(html, sprintf("          <th>%s</th>", col))
+          }
+
+          html <- c(html,
+            "        </tr>",
+            "      </thead>",
+            "      <tbody>"
+          )
+
+          for (i in 1:nrow(analysis$by_group)) {
+            html <- c(html, "        <tr>")
+            for (col in names(analysis$by_group)) {
+              val <- analysis$by_group[i, col]
+              val_str <- if (is.numeric(val)) sprintf("%.3f", val) else as.character(val)
+              html <- c(html, sprintf("          <td>%s</td>", val_str))
+            }
+            html <- c(html, "        </tr>")
+          }
+
+          html <- c(html,
+            "      </tbody>",
+            "    </table>"
+          )
+        }
+      }
+    }
+  }
+
+  return(html)
+}
+
 generate_grouped_html <- function(content) {
-  c("    <h2>Grouped Analysis</h2>",
-    "    <p>Group comparison results...</p>")
+  html <- c(
+    "    <h2>Grouped Analysis</h2>"
+  )
+
+  # Statistics table
+  if (!is.null(content$statistics)) {
+    html <- c(html,
+      "    <h3>Group Statistics</h3>",
+      "    <table>",
+      "      <thead>",
+      "        <tr>"
+    )
+
+    # Header
+    for (col in names(content$statistics)) {
+      html <- c(html, sprintf("          <th>%s</th>", col))
+    }
+
+    html <- c(html,
+      "        </tr>",
+      "      </thead>",
+      "      <tbody>"
+    )
+
+    # Rows
+    for (i in 1:nrow(content$statistics)) {
+      html <- c(html, "        <tr>")
+      for (col in names(content$statistics)) {
+        val <- content$statistics[i, col]
+        val_str <- if (is.numeric(val)) sprintf("%.3f", val) else as.character(val)
+        html <- c(html, sprintf("          <td>%s</td>", val_str))
+      }
+      html <- c(html, "        </tr>")
+    }
+
+    html <- c(html,
+      "      </tbody>",
+      "    </table>"
+    )
+  }
+
+  # Insights
+  if (!is.null(content$insights) && length(content$insights) > 0) {
+    html <- c(html,
+      "    <h3>Key Insights</h3>"
+    )
+
+    for (insight in content$insights) {
+      html <- c(html,
+        sprintf("    <div class='insight'>%s</div>", insight)
+      )
+    }
+  }
+
+  return(html)
 }
 
 generate_comparison_html <- function(content) {
@@ -700,6 +883,90 @@ generate_pca_html <- function(content) {
     "    <p>PCA results...</p>")
 }
 
+generate_comprehensive_markdown <- function(content, include_interpretations) {
+  md <- c(
+    "## Comprehensive Analysis Report",
+    "",
+    "This report includes multiple analyses performed on your data.",
+    ""
+  )
+
+  # Add insights summary
+  if (include_interpretations && !is.null(content$insights) &&
+      length(content$insights) > 0) {
+    md <- c(md,
+      "### Key Insights Summary",
+      ""
+    )
+
+    for (insight in content$insights) {
+      md <- c(md, sprintf("- %s", insight))
+    }
+
+    md <- c(md, "")
+  }
+
+  # Add each analysis section
+  if (!is.null(content$analyses)) {
+    for (analysis_name in names(content$analyses)) {
+      analysis <- content$analyses[[analysis_name]]
+
+      if (!is.null(analysis)) {
+        # Section header
+        section_title <- tools::toTitleCase(gsub("_", " ", analysis_name))
+        md <- c(md,
+          sprintf("### %s Analysis", section_title),
+          ""
+        )
+
+        # Statistics table
+        if (!is.null(analysis$statistics)) {
+          stats_df <- analysis$statistics
+
+          # Create markdown table
+          header <- paste("|", paste(names(stats_df), collapse = " | "), "|")
+          separator <- paste("|", paste(rep("---", ncol(stats_df)), collapse = " | "), "|")
+
+          md <- c(md, header, separator)
+
+          # Rows
+          for (i in 1:nrow(stats_df)) {
+            row_vals <- sapply(stats_df[i, ], function(x) {
+              if (is.numeric(x)) sprintf("%.3f", x) else as.character(x)
+            })
+            row_str <- paste("|", paste(row_vals, collapse = " | "), "|")
+            md <- c(md, row_str)
+          }
+
+          md <- c(md, "")
+        }
+
+        # by_group table
+        if (!is.null(analysis$by_group)) {
+          by_group_df <- analysis$by_group
+
+          header <- paste("|", paste(names(by_group_df), collapse = " | "), "|")
+          separator <- paste("|", paste(rep("---", ncol(by_group_df)), collapse = " | "), "|")
+
+          md <- c(md, header, separator)
+
+          for (i in 1:nrow(by_group_df)) {
+            row_vals <- sapply(by_group_df[i, ], function(x) {
+              if (is.numeric(x)) sprintf("%.3f", x) else as.character(x)
+            })
+            row_str <- paste("|", paste(row_vals, collapse = " | "), "|")
+            md <- c(md, row_str)
+          }
+
+          md <- c(md, "")
+        }
+      }
+    }
+  }
+
+  return(md)
+}
+
 generate_grouped_markdown <- function(content) {
   c("## Grouped Analysis", "")
 }
@@ -708,8 +975,116 @@ generate_comparison_markdown <- function(content) {
   c("## Group Comparison", "")
 }
 
+add_comprehensive_word <- function(doc, content) {
+  # Add heading
+  doc <- officer::body_add_par(doc, "Comprehensive Analysis Report",
+                               style = "heading 2")
+
+  # Add each analysis section
+  if (!is.null(content$analyses)) {
+    for (analysis_name in names(content$analyses)) {
+      analysis <- content$analyses[[analysis_name]]
+
+      if (!is.null(analysis)) {
+        # Section header
+        section_title <- tools::toTitleCase(gsub("_", " ", analysis_name))
+        doc <- officer::body_add_par(doc, paste(section_title, "Analysis"),
+                                     style = "heading 3")
+
+        # Add statistics table
+        if (!is.null(analysis$statistics)) {
+          if (requireNamespace("flextable", quietly = TRUE)) {
+            ft <- flextable::flextable(analysis$statistics)
+            ft <- flextable::theme_vanilla(ft)
+            doc <- flextable::body_add_flextable(doc, ft)
+          }
+        }
+
+        # Add by_group table
+        if (!is.null(analysis$by_group)) {
+          if (requireNamespace("flextable", quietly = TRUE)) {
+            ft <- flextable::flextable(analysis$by_group)
+            ft <- flextable::theme_vanilla(ft)
+            doc <- flextable::body_add_flextable(doc, ft)
+          }
+        }
+
+        doc <- officer::body_add_par(doc, "", style = "Normal")
+      }
+    }
+  }
+
+  # Add insights
+  if (!is.null(content$insights) && length(content$insights) > 0) {
+    doc <- officer::body_add_par(doc, "Key Insights", style = "heading 3")
+
+    for (insight in content$insights) {
+      doc <- officer::body_add_par(doc, insight, style = "Normal")
+    }
+  }
+
+  return(doc)
+}
+
 add_grouped_word <- function(doc, content) { doc }
 add_comparison_word <- function(doc, content) { doc }
+
+add_comprehensive_excel <- function(wb, content) {
+  # Add each analysis as a separate sheet
+  if (!is.null(content$analyses)) {
+    for (analysis_name in names(content$analyses)) {
+      analysis <- content$analyses[[analysis_name]]
+
+      if (!is.null(analysis)) {
+        # Sheet name (Excel has 31 char limit)
+        sheet_name <- substr(tools::toTitleCase(gsub("_", " ", analysis_name)), 1, 31)
+
+        # Add statistics
+        if (!is.null(analysis$statistics)) {
+          openxlsx::addWorksheet(wb, sheet_name)
+          openxlsx::writeData(wb, sheet_name, analysis$statistics)
+
+          # Format header
+          openxlsx::addStyle(wb, sheet_name,
+            style = openxlsx::createStyle(fgFill = "#3498db", fontColour = "white",
+                                          textDecoration = "bold"),
+            rows = 1,
+            cols = 1:ncol(analysis$statistics),
+            gridExpand = TRUE
+          )
+        }
+
+        # Add by_group if exists
+        if (!is.null(analysis$by_group)) {
+          sheet_name_grp <- substr(paste(sheet_name, "Groups"), 1, 31)
+          openxlsx::addWorksheet(wb, sheet_name_grp)
+          openxlsx::writeData(wb, sheet_name_grp, analysis$by_group)
+
+          openxlsx::addStyle(wb, sheet_name_grp,
+            style = openxlsx::createStyle(fgFill = "#3498db", fontColour = "white",
+                                          textDecoration = "bold"),
+            rows = 1,
+            cols = 1:ncol(analysis$by_group),
+            gridExpand = TRUE
+          )
+        }
+      }
+    }
+  }
+
+  # Insights sheet
+  if (!is.null(content$insights) && length(content$insights) > 0) {
+    openxlsx::addWorksheet(wb, "Insights")
+    insights_df <- data.frame(
+      Number = 1:length(content$insights),
+      Insight = content$insights
+    )
+    openxlsx::writeData(wb, "Insights", insights_df)
+  }
+
+  return(wb)
+}
+
 add_grouped_excel <- function(wb, content) { wb }
 add_comparison_excel <- function(wb, content) { wb }
 add_pca_excel <- function(wb, content) { wb }
