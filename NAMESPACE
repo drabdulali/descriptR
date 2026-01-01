@@ -10,6 +10,11 @@ export(perform_outlier_analysis)
 export(perform_pca_analysis)
 export(perform_comprehensive_analysis)
 
+# NEW: Advanced Statistical Analysis (Phase 1)
+export(perform_regression_analysis)
+export(perform_anova)
+export(impute_missing)
+
 # Effect Sizes
 export(compute_cohens_d)
 export(compute_eta_squared)
