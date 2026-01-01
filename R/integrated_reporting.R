@@ -927,10 +927,16 @@ batch_export_tables <- function(data_list,
 #' @description
 #' Generates all relevant plots for comprehensive analysis results.
 #' Creates histograms, boxplots, correlation plots, QQ plots, etc.
+#' Generate ALL Comprehensive Plots
 #'
-#' @param data Original data frame
+#' @description
+#' Generates EVERY possible plot type for comprehensive analysis.
+#' Creates 10+ plot types including histograms, density, boxplots, violin,
+#' QQ plots, scatter, correlations, bar plots, outliers, and missing data.
+#'
+#' @param data Original data frame  
 #' @param result Comprehensive analysis result
-#' @param vars Variables to plot (NULL for all numeric)
+#' @param vars Variables to plot (NULL for all)
 #' @param group Grouping variable (optional)
 #'
 #' @return List of ggplot objects
@@ -943,6 +949,165 @@ generate_comprehensive_plots <- function(data, result = NULL, vars = NULL, group
     message("ggplot2 required for plotting. Skipping plot generation.")
     return(list())
   }
+
+  plots <- list()
+
+  # Determine variables to plot
+  if (is.null(vars)) {
+    vars <- names(data)
+  }
+
+  numeric_vars <- names(data)[sapply(data, is.numeric)]
+  categorical_vars <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
+
+  # Limit to avoid excessive plots but still comprehensive
+  numeric_vars <- head(numeric_vars, 10)
+  categorical_vars <- head(categorical_vars, 5)
+
+  message(sprintf("Generating comprehensive visualizations: %d numeric, %d categorical variables", 
+                  length(numeric_vars), length(categorical_vars)))
+
+  # ==============================================================================
+  # 1. HISTOGRAMS - Distribution of each variable
+  # ==============================================================================
+  for (var in numeric_vars) {
+    tryCatch({
+      p <- plot_variable(data, x = var, plot_type = "histogram", theme = "publication",
+                        title = paste("Histogram:", var), subtitle = "Distribution with density overlay")
+      plots[[paste0("01_histogram_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 2. DENSITY PLOTS - Smooth distribution curves
+  # ==============================================================================
+  for (var in numeric_vars) {
+    tryCatch({
+      p <- plot_variable(data, x = var, plot_type = "density", theme = "publication",
+                        title = paste("Density:", var), subtitle = "Kernel density estimation")
+      plots[[paste0("02_density_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 3. BOXPLOTS - Quartiles and outliers
+  # ==============================================================================
+  for (var in numeric_vars) {
+    tryCatch({
+      p <- ggplot2::ggplot(data, ggplot2::aes(y = !!ggplot2::sym(var))) +
+        ggplot2::geom_boxplot(fill = "#3498db", alpha = 0.7) +
+        ggplot2::labs(title = paste("Boxplot:", var), subtitle = "Median, quartiles, outliers", y = var) +
+        ggplot2::theme_minimal()
+      plots[[paste0("03_boxplot_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 4. BOXPLOTS BY GROUP
+  # ==============================================================================
+  if (!is.null(group) && group %in% names(data)) {
+    for (var in numeric_vars) {
+      tryCatch({
+        p <- plot_variable(data, x = group, y = var, plot_type = "boxplot", theme = "publication",
+                          title = paste(var, "by", group), subtitle = "Group comparisons")
+        plots[[paste0("04_boxplot_grouped_", var)]] <- p
+      }, error = function(e) NULL)
+    }
+  }
+
+  # ==============================================================================
+  # 5. VIOLIN PLOTS BY GROUP
+  # ==============================================================================
+  if (!is.null(group) && group %in% names(data)) {
+    for (var in head(numeric_vars, 5)) {
+      tryCatch({
+        p <- plot_variable(data, x = group, y = var, plot_type = "violin", theme = "publication",
+                          title = paste("Violin:", var, "by", group), subtitle = "Distribution shapes")
+        plots[[paste0("05_violin_", var)]] <- p
+      }, error = function(e) NULL)
+    }
+  }
+
+  # ==============================================================================
+  # 6. QQ PLOTS - Normality assessment for ALL numeric variables
+  # ==============================================================================
+  for (var in numeric_vars) {
+    tryCatch({
+      p <- plot_variable(data, x = var, plot_type = "qq", theme = "publication",
+                        title = paste("Q-Q Plot:", var), subtitle = "Normality assessment")
+      plots[[paste0("06_qq_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 7. SCATTER PLOTS - Pairwise relationships
+  # ==============================================================================
+  if (length(numeric_vars) >= 2) {
+    pairs <- min(5, length(numeric_vars) - 1)
+    for (i in 1:pairs) {
+      tryCatch({
+        p <- plot_variable(data, x = numeric_vars[i], y = numeric_vars[i + 1], group = group,
+                          plot_type = "scatter", theme = "publication",
+                          title = paste(numeric_vars[i], "vs", numeric_vars[i + 1]), 
+                          subtitle = "Relationship with trend")
+        plots[[paste0("07_scatter_", i)]] <- p
+      }, error = function(e) NULL)
+    }
+  }
+
+  # ==============================================================================
+  # 8. CORRELATION HEATMAP
+  # ==============================================================================
+  if (length(numeric_vars) >= 2) {
+    tryCatch({
+      p <- plot_correlation_matrix(data[numeric_vars], method = "pearson",
+                                   title = "Correlation Heatmap", theme = "publication")
+      plots[[paste0("08_correlogram")]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 9. BAR PLOTS - Categorical variables
+  # ==============================================================================
+  for (cat_var in categorical_vars) {
+    tryCatch({
+      p <- ggplot2::ggplot(data, ggplot2::aes(x = !!ggplot2::sym(cat_var))) +
+        ggplot2::geom_bar(fill = "#3498db", alpha = 0.8) +
+        ggplot2::labs(title = paste("Frequency:", cat_var), subtitle = "Count by category",
+                     x = cat_var, y = "Count") +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+      plots[[paste0("09_barplot_", cat_var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 10. MISSING DATA PATTERN
+  # ==============================================================================
+  if (any(is.na(data))) {
+    tryCatch({
+      p <- plot_missing_pattern(data)
+      plots[[paste0("10_missing_pattern")]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # ==============================================================================
+  # 11. OUTLIER PLOTS
+  # ==============================================================================
+  for (var in head(numeric_vars, 5)) {
+    tryCatch({
+      outliers <- detect_outliers(data, vars = var, method = "zscore")
+      if (!is.null(outliers$outliers) && nrow(outliers$outliers) > 0) {
+        p <- plot_outliers(outliers)
+        plots[[paste0("11_outliers_", var)]] <- p
+      }
+    }, error = function(e) NULL)
+  }
+
+  message(sprintf("✅ Generated %d visualizations", length(plots)))
+  return(plots)
+}
+
 
   plots <- list()
 
