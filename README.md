@@ -958,7 +958,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Author
 
 **Abdul Ali**
-- Email: dr.abdulali@example.com
+- Email: abdulali.wallana125@gmail.com
 - GitHub: [@drabdulali](https://github.com/drabdulali)
 
 ---
