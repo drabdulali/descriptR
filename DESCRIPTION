@@ -8,14 +8,17 @@ Authors@R: c(
            email = "dr.abdulali@example.com",
            role = c("aut", "cre"))
     )
-Description: A unified, intelligent R package for descriptive and inferential
-    statistics that automatically detects variable types and applies appropriate
-    analyses. Generates narrative insights from data and produces publication-ready
-    outputs in multiple formats (HTML, Word, Excel, PDF). Handles missing data
-    intelligently, supports grouped comparisons with effect sizes, and integrates
-    seamlessly with tidyverse workflows. Features advanced color schemes and
-    multi-resolution export capabilities for publications, presentations, and
-    social media.
+Description: A unified, intelligent R package for comprehensive descriptive and
+    inferential statistics that automatically detects variable types and applies
+    appropriate analyses. Provides interactive variable selection for customized
+    analyses. The 'analyze_all()' function performs ALL available statistical
+    methods in a single call and generates one complete report with tables, insights,
+    and visualizations. Generates narrative insights from data and produces
+    publication-ready outputs in multiple formats (HTML, Word with embedded figures,
+    Excel, Markdown). Word documents include all statistical tables AND publication-
+    quality visualizations. Handles missing data intelligently, supports grouped
+    comparisons with effect sizes, and integrates seamlessly with tidyverse workflows.
+    Features advanced colorblind-safe schemes and multi-resolution export capabilities.
 License: MIT + file LICENSE
 URL: https://github.com/drabdulali/descriptR
 BugReports: https://github.com/drabdulali/descriptR/issues

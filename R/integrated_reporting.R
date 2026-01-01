@@ -684,7 +684,10 @@ perform_comprehensive_analysis <- function(data, vars = NULL, group = NULL, ...)
       metadata = list(
         analysis_type = "comprehensive",
         n_analyses = sum(!sapply(results, is.null)),
-        timestamp = Sys.time()
+        timestamp = Sys.time(),
+        original_data = data,
+        vars = vars,
+        group = group
       )
     ),
     class = "descriptR_comprehensive"
@@ -916,4 +919,99 @@ batch_export_tables <- function(data_list,
 
     return(invisible(created_files))
   }
+}
+
+
+#' Generate Comprehensive Plots
+#'
+#' @description
+#' Generates all relevant plots for comprehensive analysis results.
+#' Creates histograms, boxplots, correlation plots, QQ plots, etc.
+#'
+#' @param data Original data frame
+#' @param result Comprehensive analysis result
+#' @param vars Variables to plot (NULL for all numeric)
+#' @param group Grouping variable (optional)
+#'
+#' @return List of ggplot objects
+#'
+#' @keywords internal
+#' @noRd
+generate_comprehensive_plots <- function(data, result = NULL, vars = NULL, group = NULL) {
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    message("ggplot2 required for plotting. Skipping plot generation.")
+    return(list())
+  }
+
+  plots <- list()
+
+  # Determine variables to plot
+  if (is.null(vars)) {
+    vars <- names(data)[sapply(data, is.numeric)]
+  }
+
+  # Limit to first 6 variables to avoid too many plots
+  vars <- head(vars, 6)
+
+  # 1. Histograms for each numeric variable
+  for (var in vars) {
+    tryCatch({
+      p <- plot_variable(
+        data,
+        x = var,
+        plot_type = "histogram",
+        theme = "publication",
+        title = paste("Distribution of", var)
+      )
+      plots[[paste0("histogram_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # 2. Boxplots by group (if group specified)
+  if (!is.null(group) && group %in% names(data)) {
+    for (var in vars) {
+      tryCatch({
+        p <- plot_variable(
+          data,
+          x = group,
+          y = var,
+          plot_type = "boxplot",
+          theme = "publication",
+          title = paste(var, "by", group)
+        )
+        plots[[paste0("boxplot_", var, "_by_", group)]] <- p
+      }, error = function(e) NULL)
+    }
+  }
+
+  # 3. QQ plots for normality (first 3 variables)
+  for (var in head(vars, 3)) {
+    tryCatch({
+      p <- plot_variable(
+        data,
+        x = var,
+        plot_type = "qq",
+        theme = "publication",
+        title = paste("Q-Q Plot:", var)
+      )
+      plots[[paste0("qq_", var)]] <- p
+    }, error = function(e) NULL)
+  }
+
+  # 4. Correlation plot (if enough variables)
+  if (length(vars) >= 2) {
+    tryCatch({
+      p <- plot_variable(
+        data,
+        x = vars,
+        plot_type = "correlogram",
+        theme = "publication",
+        title = "Correlation Matrix"
+      )
+      plots[[paste0("correlogram")]] <- p
+    }, error = function(e) NULL)
+  }
+
+  return(plots)
 }

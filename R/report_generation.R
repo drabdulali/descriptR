@@ -140,6 +140,10 @@ extract_report_content <- function(result, include_interpretations) {
     content$analyses <- result$analyses
     content$insights <- if (include_interpretations) result$insights else NULL
     content$metadata <- result$metadata
+    # Store original data and vars for plot generation
+    content$data <- result$metadata$original_data
+    content$vars <- result$metadata$vars
+    content$group <- result$metadata$group
 
   } else if (inherits(result, "descriptR_result")) {
     # Single analysis result (descriptive, correlation, normality, missing, outliers)
@@ -147,6 +151,8 @@ extract_report_content <- function(result, include_interpretations) {
     content$statistics <- result$statistics
     content$insights <- if (include_interpretations) result$insights else NULL
     content$metadata <- result$metadata
+    content$data <- result$metadata$original_data
+    content$vars <- result$metadata$vars
 
   } else if (inherits(result, "descriptR")) {
     # describe_data result
@@ -162,6 +168,8 @@ extract_report_content <- function(result, include_interpretations) {
     content$statistics <- result$by_group
     content$insights <- if (include_interpretations) result$insights else NULL
     content$tests <- result$tests
+    content$data <- result$metadata$original_data
+    content$group <- result$metadata$grouping_variable
 
   } else if (inherits(result, "descriptR_comparison")) {
     # compare_groups result
@@ -181,6 +189,23 @@ extract_report_content <- function(result, include_interpretations) {
     # Generic result
     content$type <- "generic"
     content$data <- result
+  }
+
+  # Generate plots if data is available
+  if (!is.null(content$data)) {
+    content$plots <- tryCatch({
+      generate_comprehensive_plots(
+        content$data,
+        result,
+        vars = content$vars,
+        group = content$group
+      )
+    }, error = function(e) {
+      message("Plot generation failed: ", e$message)
+      list()
+    })
+  } else {
+    content$plots <- list()
   }
 
   return(content)
@@ -281,15 +306,21 @@ generate_word_report <- function(content, output_file, metadata, template,
   doc <- officer::body_add_par(doc, meta_text, style = "Normal")
   doc <- officer::body_add_par(doc, "", style = "Normal")
 
+  # Generate plots if requested
+  plots <- NULL
+  if (include_plots) {
+    plots <- content$plots
+  }
+
   # Add content based on type
   if (content$type == "comprehensive") {
-    doc <- add_comprehensive_word(doc, content)
+    doc <- add_comprehensive_word(doc, content, plots)
   } else if (content$type == "descriptive") {
-    doc <- add_descriptive_word(doc, content)
+    doc <- add_descriptive_word(doc, content, plots)
   } else if (content$type == "grouped") {
-    doc <- add_grouped_word(doc, content)
+    doc <- add_grouped_word(doc, content, plots)
   } else if (content$type == "comparison") {
-    doc <- add_comparison_word(doc, content)
+    doc <- add_comparison_word(doc, content, plots)
   }
 
   # Add footer
@@ -635,7 +666,7 @@ generate_descriptive_markdown <- function(content, include_interpretations) {
 #'
 #' @keywords internal
 #' @noRd
-add_descriptive_word <- function(doc, content) {
+add_descriptive_word <- function(doc, content, plots = NULL) {
 
   # Add heading
   doc <- officer::body_add_par(doc, "Descriptive Statistics", style = "heading 2")
@@ -663,6 +694,37 @@ add_descriptive_word <- function(doc, content) {
 
     for (insight in content$insights) {
       doc <- officer::body_add_par(doc, insight, style = "Normal")
+    }
+  }
+
+  # Add plots if available
+  if (!is.null(plots) && length(plots) > 0) {
+    doc <- officer::body_add_par(doc, "", style = "Normal")
+    doc <- officer::body_add_par(doc, "Visualizations", style = "heading 2")
+    doc <- officer::body_add_par(doc, "", style = "Normal")
+
+    for (plot_name in names(plots)) {
+      plot_obj <- plots[[plot_name]]
+
+      plot_title <- tools::toTitleCase(gsub("_", " ", plot_name))
+      doc <- officer::body_add_par(doc, plot_title, style = "heading 3")
+
+      tryCatch({
+        temp_file <- tempfile(fileext = ".png")
+        ggplot2::ggsave(temp_file, plot_obj, width = 7, height = 5, dpi = 300)
+
+        doc <- officer::body_add_img(
+          doc,
+          src = temp_file,
+          width = 6,
+          height = 4
+        )
+
+        unlink(temp_file)
+        doc <- officer::body_add_par(doc, "", style = "Normal")
+      }, error = function(e) {
+        message("Failed to add plot '", plot_name, "': ", e$message)
+      })
     }
   }
 
@@ -968,7 +1030,7 @@ generate_comparison_markdown <- function(content) {
   c("## Group Comparison", "")
 }
 
-add_comprehensive_word <- function(doc, content) {
+add_comprehensive_word <- function(doc, content, plots = NULL) {
   # Add heading
   doc <- officer::body_add_par(doc, "Comprehensive Analysis Report",
                                style = "heading 2")
@@ -1016,11 +1078,46 @@ add_comprehensive_word <- function(doc, content) {
     }
   }
 
+  # CRITICAL: Add plots to Word document
+  if (!is.null(plots) && length(plots) > 0) {
+    doc <- officer::body_add_par(doc, "", style = "Normal")
+    doc <- officer::body_add_par(doc, "Visualizations", style = "heading 2")
+    doc <- officer::body_add_par(doc, "", style = "Normal")
+
+    for (plot_name in names(plots)) {
+      plot_obj <- plots[[plot_name]]
+
+      # Add plot title
+      plot_title <- tools::toTitleCase(gsub("_", " ", plot_name))
+      doc <- officer::body_add_par(doc, plot_title, style = "heading 3")
+
+      # Save plot temporarily and add to document
+      tryCatch({
+        temp_file <- tempfile(fileext = ".png")
+        ggplot2::ggsave(temp_file, plot_obj, width = 7, height = 5, dpi = 300)
+
+        doc <- officer::body_add_img(
+          doc,
+          src = temp_file,
+          width = 6,
+          height = 4
+        )
+
+        # Clean up temp file
+        unlink(temp_file)
+
+        doc <- officer::body_add_par(doc, "", style = "Normal")
+      }, error = function(e) {
+        message("Failed to add plot '", plot_name, "' to Word document: ", e$message)
+      })
+    }
+  }
+
   return(doc)
 }
 
-add_grouped_word <- function(doc, content) { doc }
-add_comparison_word <- function(doc, content) { doc }
+add_grouped_word <- function(doc, content, plots = NULL) { doc }
+add_comparison_word <- function(doc, content, plots = NULL) { doc }
 
 add_comprehensive_excel <- function(wb, content) {
   # Add each analysis as a separate sheet

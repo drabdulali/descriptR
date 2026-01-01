@@ -73,8 +73,13 @@ export(quick_export_excel)
 
 # Integrated Reporting
 export(analyze_and_report)
+export(analyze_all)
 export(export_plots)
 export(batch_export_tables)
+
+# Interactive Analysis
+export(select_variables)
+export(select_grouping_variable)
 
 # Import from other packages
 importFrom(dplyr, "%>%")
