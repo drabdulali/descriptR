@@ -133,7 +133,7 @@ analyze_and_report <- function(data,
 
 #' Helper: Perform Descriptive Analysis
 #' @keywords internal
-perform_descriptive_analysis <- function(data, vars, ...) {
+perform_descriptive_analysis <- function(data, vars = NULL, ...) {
   # This would call the main descriptive statistics function
   # For now, creating a structured result
   if (is.null(vars)) {
@@ -205,7 +205,7 @@ perform_descriptive_analysis <- function(data, vars, ...) {
 
 #' Helper: Perform Grouped Analysis
 #' @keywords internal
-perform_grouped_analysis <- function(data, group, vars, ...) {
+perform_grouped_analysis <- function(data, group, vars = NULL, ...) {
   if (is.null(group)) {
     stop("group variable must be specified for grouped analysis", call. = FALSE)
   }
@@ -283,7 +283,7 @@ perform_grouped_analysis <- function(data, group, vars, ...) {
 
 #' Helper: Perform Correlation Analysis
 #' @keywords internal
-perform_correlation_analysis <- function(data, vars, method = "pearson", ...) {
+perform_correlation_analysis <- function(data, vars = NULL, method = "pearson", ...) {
   if (is.null(vars)) {
     vars <- names(data)[sapply(data, is.numeric)]
   }
@@ -359,7 +359,7 @@ perform_correlation_analysis <- function(data, vars, method = "pearson", ...) {
 
 #' Helper: Perform Normality Analysis
 #' @keywords internal
-perform_normality_analysis <- function(data, vars, ...) {
+perform_normality_analysis <- function(data, vars = NULL, ...) {
   if (is.null(vars)) {
     vars <- names(data)[sapply(data, is.numeric)]
   }
@@ -423,7 +423,7 @@ perform_normality_analysis <- function(data, vars, ...) {
 
 #' Helper: Perform Missing Data Analysis
 #' @keywords internal
-perform_missing_analysis <- function(data, vars, ...) {
+perform_missing_analysis <- function(data, vars = NULL, ...) {
   if (is.null(vars)) {
     vars <- names(data)
   }
@@ -487,7 +487,7 @@ perform_missing_analysis <- function(data, vars, ...) {
 
 #' Helper: Perform Outlier Analysis
 #' @keywords internal
-perform_outlier_analysis <- function(data, vars, method = "zscore", ...) {
+perform_outlier_analysis <- function(data, vars = NULL, method = "zscore", ...) {
   if (is.null(vars)) {
     vars <- names(data)[sapply(data, is.numeric)]
   }
@@ -549,7 +549,7 @@ perform_outlier_analysis <- function(data, vars, method = "zscore", ...) {
 
 #' Helper: Perform PCA Analysis
 #' @keywords internal
-perform_pca_analysis <- function(data, vars, scale = TRUE, ...) {
+perform_pca_analysis <- function(data, vars = NULL, scale = TRUE, ...) {
   if (is.null(vars)) {
     vars <- names(data)[sapply(data, is.numeric)]
   }
@@ -618,7 +618,7 @@ perform_pca_analysis <- function(data, vars, scale = TRUE, ...) {
 
 #' Helper: Perform Comprehensive Analysis
 #' @keywords internal
-perform_comprehensive_analysis <- function(data, vars, group, ...) {
+perform_comprehensive_analysis <- function(data, vars = NULL, group = NULL, ...) {
   if (is.null(vars)) {
     vars <- names(data)
   }
