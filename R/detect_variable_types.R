@@ -365,6 +365,7 @@ suggest_analysis_type <- function(x, unique_threshold = 20) {
 #'
 #' @param data A data frame
 #' @param unique_threshold Threshold for continuous vs discrete (default 20)
+#' @param verbose Logical, print formatted output to console? (default TRUE)
 #'
 #' @return Invisibly returns a data frame with variable type information
 #'
@@ -372,11 +373,11 @@ suggest_analysis_type <- function(x, unique_threshold = 20) {
 #' # Print variable type summary for iris
 #' print_variable_types(iris)
 #'
-#' # For mtcars
-#' print_variable_types(mtcars)
+#' # Get summary without printing
+#' summary_df <- print_variable_types(mtcars, verbose = FALSE)
 #'
 #' @export
-print_variable_types <- function(data, unique_threshold = 20) {
+print_variable_types <- function(data, unique_threshold = 20, verbose = TRUE) {
 
   # Validate input
   validate_data_frame(data)
@@ -396,37 +397,40 @@ print_variable_types <- function(data, unique_threshold = 20) {
     stringsAsFactors = FALSE
   )
 
-  # Print formatted output
-  cat("\n")
-  cat("Variable Type Summary\n")
-  cat(rep("=", 70), "\n", sep = "")
-  cat(sprintf("Dataset: %d observations, %d variables\n\n", nrow(data), ncol(data)))
+  # Print formatted output only if verbose
 
-  # Count by type
-  type_counts <- table(all_types)
-  for (type in names(type_counts)) {
-    cat(sprintf("  %-20s: %2d variable%s\n",
-               type, type_counts[type],
-               ifelse(type_counts[type] == 1, "", "s")))
+  if (verbose) {
+    cat("\n")
+    cat("Variable Type Summary\n")
+    cat(rep("=", 70), "\n", sep = "")
+    cat(sprintf("Dataset: %d observations, %d variables\n\n", nrow(data), ncol(data)))
+
+    # Count by type
+    type_counts <- table(all_types)
+    for (type in names(type_counts)) {
+      cat(sprintf("  %-20s: %2d variable%s\n",
+                 type, type_counts[type],
+                 ifelse(type_counts[type] == 1, "", "s")))
+    }
+
+    cat("\n")
+    cat(rep("-", 70), "\n", sep = "")
+    cat(sprintf("%-20s %-15s %-10s %8s %8s\n",
+               "Variable", "Type", "Class", "Unique", "Missing"))
+    cat(rep("-", 70), "\n", sep = "")
+
+    for (i in seq_len(nrow(summary_df))) {
+      cat(sprintf("%-20s %-15s %-10s %8d %8d\n",
+                 substr(summary_df$Variable[i], 1, 20),
+                 summary_df$Type[i],
+                 substr(summary_df$Class[i], 1, 10),
+                 summary_df$N_Unique[i],
+                 summary_df$N_Missing[i]))
+    }
+
+    cat(rep("=", 70), "\n", sep = "")
+    cat("\n")
   }
-
-  cat("\n")
-  cat(rep("-", 70), "\n", sep = "")
-  cat(sprintf("%-20s %-15s %-10s %8s %8s\n",
-             "Variable", "Type", "Class", "Unique", "Missing"))
-  cat(rep("-", 70), "\n", sep = "")
-
-  for (i in seq_len(nrow(summary_df))) {
-    cat(sprintf("%-20s %-15s %-10s %8d %8d\n",
-               substr(summary_df$Variable[i], 1, 20),
-               summary_df$Type[i],
-               substr(summary_df$Class[i], 1, 10),
-               summary_df$N_Unique[i],
-               summary_df$N_Missing[i]))
-  }
-
-  cat(rep("=", 70), "\n", sep = "")
-  cat("\n")
 
   invisible(summary_df)
 }

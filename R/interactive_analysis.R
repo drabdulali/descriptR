@@ -225,6 +225,7 @@ select_grouping_variable <- function(data, prompt = NULL) {
 #' @param interactive Use interactive variable selection? (default: FALSE)
 #' @param title Report title
 #' @param author Report author
+#' @param verbose Logical, print progress messages? (default: TRUE)
 #' @param ... Additional arguments
 #'
 #' @return Invisibly returns list with results and report paths
@@ -242,6 +243,9 @@ select_grouping_variable <- function(data, prompt = NULL) {
 #'
 #' # Generate all formats
 #' analyze_all(mtcars, "mtcars_complete", format = "all")
+#'
+#' # Silent mode (no progress messages)
+#' analyze_all(mtcars, "silent_analysis", verbose = FALSE)
 #' }
 #'
 #' @export
@@ -255,6 +259,7 @@ analyze_all <- function(data,
                        interactive = FALSE,
                        title = NULL,
                        author = NULL,
+                       verbose = TRUE,
                        ...) {
 
   # Input validation
@@ -294,20 +299,20 @@ analyze_all <- function(data,
   }
 
   # Run comprehensive analysis (which includes all sub-analyses)
-  cat("\n")
-  cat("Running comprehensive analysis...\n")
-  cat("- Descriptive statistics\n")
-  cat("- Missing data analysis\n")
-  cat("- Normality tests\n")
-  cat("- Outlier detection\n")
-  cat("- Correlation analysis\n")
-  cat("- Regression analysis\n")
-  if (!is.null(group)) {
-    cat("- Grouped analysis by", group, "\n")
-    cat("- ANOVA/MANOVA analysis\n")
+  if (verbose) {
+    message("Running comprehensive analysis...")
+    message("- Descriptive statistics")
+    message("- Missing data analysis")
+    message("- Normality tests")
+    message("- Outlier detection")
+    message("- Correlation analysis")
+    message("- Regression analysis")
+    if (!is.null(group)) {
+      message("- Grouped analysis by ", group)
+      message("- ANOVA/MANOVA analysis")
+    }
+    message("- Missing data imputation")
   }
-  cat("- Missing data imputation\n")
-  cat("\n")
 
   result <- perform_comprehensive_analysis(data, vars, group, ...)
 
@@ -322,14 +327,13 @@ analyze_all <- function(data,
     author = author
   )
 
-  cat("\n")
-  cat("Analysis complete!\n")
-  cat("\n")
-  cat("Generated files:\n")
-  for (path in report_paths) {
-    cat(sprintf("  - %s\n", basename(path)))
+  if (verbose) {
+    message("\nAnalysis complete!")
+    message("\nGenerated files:")
+    for (path in report_paths) {
+      message("  - ", basename(path))
+    }
   }
-  cat("\n")
 
   # Return invisibly
   invisible(list(

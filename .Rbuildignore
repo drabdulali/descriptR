@@ -11,3 +11,9 @@
 ^community$
 ^submission_workflow$
 ^cran-comments\.md$
+^generate_all_analyses\.R$
+^quick_demo\.R$
+^quick_test\.R$
+^reinstall\.R$
+^test_phase1_functions\.R$
+^prepare_cran\.R$
